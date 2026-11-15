@@ -113,6 +113,24 @@ async function api(req, res) {
     } else if (route === '/done') {
       if (!s(body.id)) return send(res, 400, { ok: false, message: '缺少日程 id' });
       cliArgs = ['done', s(body.id)];
+    } else if (route === '/event/update') {
+      if (!s(body.id)) return send(res, 400, { ok: false, message: '缺少日程 id' });
+      cliArgs = ['edit', s(body.id)];
+      const push = (k, v) => {
+        if (v === undefined || v === null) return;
+        cliArgs.push(`--${k}=${s(v)}`); // 空字符串表示清空该字段
+      };
+      push('title', body.title);
+      push('date', body.date);
+      push('start', body.start);
+      push('end', body.end);
+      push('category', body.category);
+      push('tag', body.tags);
+      push('note', body.note);
+      push('status', body.status);
+    } else if (route === '/event/delete') {
+      if (!s(body.id)) return send(res, 400, { ok: false, message: '缺少日程 id' });
+      cliArgs = ['del', s(body.id)];
     } else if (route === '/review') {
       const kind = ['week', 'month', 'year'].includes(s(body.kind)) ? s(body.kind) : 'week';
       cliArgs = ['review', kind, '--write', ...args(['date', body.date])];

@@ -4,6 +4,7 @@
 
 ## 当前版本
 
+- v1.2.0 —— 2026-11-15（日程可改可删；时间改为小时/分钟下拉选择）
 - v1.1.0 —— 2026-11-15（UI 改版：玻璃拟态仪表盘风格）
 - 形态：DSH bundle `@local/dsh-workbench`（host 半注册 HTTP 路由）+ 浏览器单页 + CLI 数据层。
 - 入口：`http://127.0.0.1:51049/workbench`（DSH Web 已启动时）。
@@ -11,12 +12,21 @@
 ## 已完成
 
 - CLI `scripts/wb.mjs`：today / state / stats(week|month|year) / review / add(event|note|goal) /
-  log / done / list / search / check。零依赖，原子写，去 BOM，ISO 周。
+  edit / del / log / done / list / search / check。零依赖，原子写，去 BOM，ISO 周。
+  - `edit <id> [--title --date --start --end --category --tag --note --status]`：
+    时间用 `HH:MM` 校验（越界/非法直接报错），`--end` 早于 `--start` 报错，空字符串表示清空。
+  - `del <id>`：日程软删除（`deleted`+`deletedAt`，统计与检索自动跳过）、记录物理删除、
+    目标改 `status='dropped'`（UI 目标列表只显示 active）。
+  - `list events|goals|notes [--json]`；id 支持前缀/后缀匹配。
 - 数据层：`data/events.jsonl`、`data/notes.jsonl`、`data/goals.json`、`data/reviews/*.md`。
-- Host 半 `index.js`：`/workbench`（页面）、`/workbench/api/{state,search,event,note,goal,progress,done,review}`。
+- Host 半 `index.js`：`/workbench`（页面）、`/workbench/api/{state,search,event,event/update,event/delete,note,goal,progress,done,review}`。
 - UI `ui/index.html`：左侧图标导航（今日/目标/记录/检索/统计）+ 顶部 KPI 卡片行 +
   右侧内容区；玻璃卡片、柔和渐变背景、浅色深色跟随系统。统计页含 SVG 折线趋势、
   conic-gradient 分类环图、每日条形分布、标签投入。
+- 日程编辑：今日列表每条带「改 / 删」按钮，「改」打开 `#evModal` 弹窗（标题、日期、
+  起止时间、分类、标签、备注），Esc / 点遮罩可关闭；时间输入是小时 + 分钟两个 `<select>`
+  （`fillTimeSelects()` 生成 24 小时 × 5 分钟步进，`readTime()` 读值，`setTime()` 回填）。
+  「删」走 `confirm()` 后软删除。
 - UI 设计变量集中在 `ui/index.html` 顶部 `:root`（`--card`、`--brand` `#3056d3`、
   `--radius: 18px`、`--shadow`；分类色 `CAT_COLORS` 在脚本里）。改配色只动这两处。
 - 文档：`AGENTS.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/DETAIL.md`。
@@ -28,8 +38,10 @@
   末尾追加了 `@local/dsh-workbench`；pnpm 建立符号链接 `profiles/desktop/node_modules/@local/dsh-workbench`。
 - 验证：`GET /workbench` → 200（19875 字节）；`GET /workbench/api/state` → 200；
   `/event`、`/goal`、`/note`、`/progress`、`/done`、`/review`、`/search` 全部 200 且数据正确写入。
-- 链接安装意味着**改本目录文件即时生效**（`ui/index.html`、`scripts/wb.mjs` 无需重启；
-  `index.js` 需要重启 DSH）。
+- 链接安装意味着**改本目录文件即时生效**：`ui/index.html`、`scripts/wb.mjs` 刷新页面即可。
+  `index.js`（host 半）不会自动热重载，**也不必重启 DSH** —— 用
+  `plugin_manager` `set_plugin` target=`include:workbench` 先 `enabled:false` 再 `enabled:true`
+  （两次都返回 `application: "applied"`），新路由立刻生效。
 - seed 数据已清空，仓库首条提交是干净状态。
 
 ## 远程仓库
@@ -57,3 +69,7 @@
 
 - 本机 `npm` 被执行策略拦（用 `npm.cmd`），但本仓库零依赖，不需要 npm。
 - 写文件必须 UTF-8 无 BOM；PowerShell 5 的 `Set-Content -Encoding utf8` 会加 BOM。
+- **用 PowerShell 调 API 时中文会变 `?`**：`Invoke-WebRequest -Body $json` 默认不走 UTF-8。
+  必须 `[System.Text.Encoding]::UTF8.GetBytes($json)` 作 `-Body`，或写临时 `.json` 用 `-InFile`。
+  脚本返回的中文也要用 `New-Object IO.StreamReader($resp.GetResponseStream(),[Text.Encoding]::UTF8)` 读。
+  （本条是 2026-11-15 误改一条真实日程后加的：调试写接口时别拿 `state.today.events[0]` 当靶子。）

@@ -66,6 +66,21 @@ const hours = (ev) => {
   const [h2, m2] = ev.end.split(':').map(Number);
   return Math.max(0, h2 * 60 + m2 - (h1 * 60 + m1)) / 60;
 };
+/** "9:5" / "09:05" → "09:05"；非法返回 null。 */
+const normTime = (t) => {
+  const m = /^(\d{1,2}):(\d{1,2})$/.exec(String(t).trim());
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return null;
+  return `${pad(h)}:${pad(min)}`;
+};
+/** 在 events / notes / goals 里按 id（全等或前后缀）找一条。 */
+function findEvent(id) {
+  const evs = readLines(F.events);
+  const ev = evs.find((e) => !e.deleted && (e.id === id || e.id.startsWith(id) || e.id.endsWith(id)));
+  return { evs, ev };
+}
 
 /* ---------- ISO 周 ---------- */
 function weekInfo(date) {
@@ -226,6 +241,9 @@ const cmds = {
     add note  --text T [--kind note|idea|link|quote] [--tag a,b] [--source S]
     add goal  --title T [--horizon year|quarter|month] [--target N] [--unit 次] [--due D] [--area A] [--why W]
     log <goal-id> --add N | --set N [--note X]       记录目标进度
+    edit <event-id> [--title T] [--date D] [--start HH:MM] [--end HH:MM]
+                    [--category C] [--tag a,b] [--note X] [--status planned|done]
+    del <event-id|note-id|goal-id>                   删除（日程软删除，记录物理删除，目标标记 dropped）
     done <event-id>                                  标记日程完成
     list <events|goals|notes> [--from D] [--to D] [--limit N]
     search <关键词> [--limit N]
@@ -390,12 +408,96 @@ const cmds = {
   done({ pos }) {
     const id = pos[0];
     if (!id) die('用法: done <event-id>');
-    const evs = readLines(F.events);
-    const ev = evs.find((e) => e.id === id || e.id.startsWith(id) || e.id.endsWith(id));
+    const { evs, ev } = findEvent(id);
     if (!ev) die(`未找到日程 ${id}`);
     ev.status = 'done';
+    ev.updated = new Date().toISOString();
     writeLines(F.events, evs);
     console.log(`✓ 完成 ${ev.date} ${ev.title}`);
+  },
+
+  edit({ pos, opt }) {
+    const id = pos[0];
+    if (!id) die('用法: edit <event-id> [--title T] [--date D] [--start HH:MM] [--end HH:MM] [--category C] [--tag a,b] [--note X] [--status planned|done]');
+    const { evs, ev } = findEvent(id);
+    if (!ev) die(`未找到日程 ${id}`);
+    const before = { ...ev };
+    let touched = 0;
+    if (opt.title !== undefined) {
+      const t = String(opt.title).trim();
+      if (!t) die('标题不能为空');
+      ev.title = t;
+      touched++;
+    }
+    if (opt.date !== undefined) {
+      ev.date = iso(parseDate(opt.date));
+      touched++;
+    }
+    for (const k of ['start', 'end']) {
+      if (opt[k] === undefined) continue;
+      const raw = opt[k];
+      if (raw === true) continue;
+      if (String(raw).trim() === '') {
+        ev[k] = null;
+        touched++;
+        continue;
+      }
+      const t = normTime(raw);
+      if (!t) die(`--${k} 需要 HH:MM`);
+      ev[k] = t;
+      touched++;
+    }
+    if (opt.category !== undefined && opt.category !== true) {
+      if (!CATS.includes(opt.category)) die(`未知分类 ${opt.category}（${CATS.join('|')}）`);
+      ev.category = opt.category;
+      touched++;
+    }
+    if (opt.tag !== undefined) {
+      ev.tags = tags(opt.tag);
+      touched++;
+    }
+    if (opt.note !== undefined && opt.note !== true) {
+      ev.note = String(opt.note);
+      touched++;
+    }
+    if (opt.status !== undefined && opt.status !== true) {
+      if (!['planned', 'done'].includes(opt.status)) die('--status 只能是 planned 或 done');
+      ev.status = opt.status;
+      touched++;
+    }
+    if (!touched) die('没有要修改的字段');
+    if (ev.start && ev.end && ev.end < ev.start) die('结束时间早于开始时间');
+    ev.updated = new Date().toISOString();
+    writeLines(F.events, evs);
+    const where = `${before.date} ${before.start || '--:--'}-${before.end || '--:--'} ${before.title}`;
+    console.log(`✓ 已更新 ${where} → ${ev.date} ${ev.start || '--:--'}-${ev.end || '--:--'} ${ev.title} (${fmtH(hours(ev))})`);
+  },
+
+  del({ pos }) {
+    const id = pos[0];
+    if (!id) die('用法: del <event-id|note-id|goal-id>');
+    const { evs, ev } = findEvent(id);
+    if (ev) {
+      ev.deleted = true;
+      ev.deletedAt = new Date().toISOString();
+      writeLines(F.events, evs);
+      return console.log(`✓ 已删除日程 ${ev.date} ${ev.title}`);
+    }
+    const notes = readLines(F.notes);
+    const note = notes.find((n) => n.id === id || n.id.startsWith(id) || n.id.endsWith(id));
+    if (note) {
+      writeLines(F.notes, notes.filter((n) => n !== note));
+      return console.log(`✓ 已删除记录 ${note.id}`);
+    }
+    const db = readGoals();
+    const goal = db.goals.find((g) => g.id === id || g.id.startsWith(id) || g.id.endsWith(id));
+    if (goal) {
+      goal.status = 'dropped';
+      goal.updated = today();
+      writeGoals(db);
+      return console.log(`✓ 已删除目标 ${goal.title}`);
+    }
+    die(`未找到 ${id}`);
   },
 
   list({ pos, opt }) {
@@ -426,6 +528,7 @@ const cmds = {
     const limit = opt.limit ? Number(opt.limit) : 20;
     const hits = [];
     for (const e of readLines(F.events)) {
+      if (e.deleted) continue;
       const hay = `${e.title} ${e.note || ''} ${(e.tags || []).join(' ')} ${e.category || ''}`.toLowerCase();
       if (hay.includes(q)) hits.push({ at: `${path.relative(DATA, F.events)}:${e.date}`, text: `${e.date} ${e.title}${e.note ? ' — ' + e.note : ''}`, id: e.id });
     }

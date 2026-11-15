@@ -14,6 +14,7 @@
     --line: rgba(15, 23, 42, .07);
     --card: rgba(255, 255, 255, .74);
     --card-2: rgba(255, 255, 255, .55);
+    --card-solid: #ffffff;
     --brand: #3056d3;
     --brand-2: #4f7cff;
     --brand-soft: #e9efff;
@@ -35,6 +36,7 @@
       --line: rgba(255, 255, 255, .08);
       --card: rgba(30, 36, 50, .72);
       --card-2: rgba(30, 36, 50, .5);
+      --card-solid: #1b2130;
       --brand: #8fb0ff;
       --brand-2: #6d92ff;
       --brand-soft: rgba(79, 124, 255, .16);
@@ -306,6 +308,32 @@
   .empty { color: var(--muted-2); padding: 14px 0; font-size: 12.5px; }
   .tags-line { display: flex; gap: 6px; flex-wrap: wrap; }
 
+  /* ---------- 时间选择 / 弹窗 ---------- */
+  .timepick {
+    display: flex; align-items: center; gap: 3px; flex: 1 1 168px;
+    background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 5px 8px;
+  }
+  .timepick .tp-label { font-size: 11px; color: var(--muted-2); margin-right: 2px; flex: none; }
+  .timepick select {
+    width: auto; flex: none; border: 0; background: transparent; padding: 2px 1px; border-radius: 6px;
+    font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 13px;
+  }
+  .timepick select:focus { box-shadow: none; background: var(--card); }
+  .timepick .sep { color: var(--muted-2); font-size: 12px; }
+
+  .modal {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 20px;
+    background: rgba(15, 23, 42, .30); backdrop-filter: blur(3px);
+  }
+  .modal[hidden] { display: none; }
+  .modal-card {
+    width: min(460px, 100%); max-height: 88vh; overflow: auto;
+    background: var(--card-solid); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 30px 70px rgba(15, 23, 42, .28); padding: 20px;
+  }
+  .modal-card .card-head { margin-bottom: 12px; }
+  .modal-card .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
   .toast {
     position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(16px);
     background: rgba(15, 23, 42, .92); color: #fff; padding: 10px 18px; border-radius: 12px;
@@ -381,15 +409,21 @@
           <form id="eventForm">
             <div class="row"><input name="title" placeholder="做什么" required></div>
             <div class="row">
-              <input name="start" class="tight" placeholder="开始 09:00" inputmode="numeric">
-              <input name="end" class="tight" placeholder="结束 10:30" inputmode="numeric">
+              <div class="timepick"><span class="tp-label">开始</span>
+                <select class="hour" name="sh"></select><span class="sep">:</span><select class="min" name="sm"></select>
+              </div>
+              <div class="timepick"><span class="tp-label">结束</span>
+                <select class="hour" name="eh"></select><span class="sep">:</span><select class="min" name="em"></select>
+              </div>
+            </div>
+            <div class="row">
               <select name="category">
                 <option value="work">工作</option><option value="study">学习</option>
                 <option value="health">健康</option><option value="life">生活</option>
                 <option value="rest">休息</option><option value="other">其他</option>
               </select>
+              <input name="tags" placeholder="标签，逗号分隔">
             </div>
-            <div class="row"><input name="tags" placeholder="标签，逗号分隔"></div>
             <div class="row"><button class="primary" type="submit">加入今日</button></div>
           </form>
         </div>
@@ -487,6 +521,37 @@
         </div>
       </div>
     </section>
+  </div>
+</div>
+<div class="modal" id="evModal" hidden>
+  <div class="modal-card">
+    <div class="card-head"><h2>编辑日程</h2><span class="hint">留空时间 = 待定</span></div>
+    <form id="editForm">
+      <input type="hidden" name="id">
+      <div class="row"><input name="title" placeholder="标题" required></div>
+      <div class="row"><input type="date" name="date" required></div>
+      <div class="row">
+        <div class="timepick"><span class="tp-label">开始</span>
+          <select class="hour" name="sh"></select><span class="sep">:</span><select class="min" name="sm"></select>
+        </div>
+        <div class="timepick"><span class="tp-label">结束</span>
+          <select class="hour" name="eh"></select><span class="sep">:</span><select class="min" name="em"></select>
+        </div>
+      </div>
+      <div class="row">
+        <select name="category">
+          <option value="work">工作</option><option value="study">学习</option>
+          <option value="health">健康</option><option value="life">生活</option>
+          <option value="rest">休息</option><option value="other">其他</option>
+        </select>
+      </div>
+      <div class="row"><input name="tags" placeholder="标签，逗号分隔"></div>
+      <div class="row"><textarea name="note" rows="2" placeholder="备注"></textarea></div>
+      <div class="acts">
+        <button type="button" class="ghost" id="editCancel">取消</button>
+        <button type="submit" class="primary">保存</button>
+      </div>
+    </form>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -599,6 +664,8 @@ function renderToday() {
       ${e.status === 'done'
         ? '<span class="chip ok">已完成</span>'
         : `<button class="ghost mini" data-done="${esc(e.id)}">完成</button>`}
+      <button class="ghost mini" data-edit="${esc(e.id)}" title="编辑这条日程">改</button>
+      <button class="ghost mini" data-del="${esc(e.id)}" title="删除这条日程">删</button>
     </li>`).join('');
   $('#todayEmpty').hidden = t.events.length > 0;
 
@@ -728,6 +795,78 @@ function donut(cats) {
 }
 
 /* ---------- 交互 ---------- */
+/* ---------- 时间选择 ---------- */
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+function fillTimeSelects(root) {
+  root.querySelectorAll('select.hour').forEach((s) => {
+    s.innerHTML = '<option value="">--</option>' + HOURS.map((h) => `<option>${h}</option>`).join('');
+  });
+  root.querySelectorAll('select.min').forEach((s) => {
+    s.innerHTML = '<option value="">--</option>' + MINUTES.map((m) => `<option>${m}</option>`).join('');
+  });
+}
+function readTime(form, which) {
+  const h = form.elements[which + 'h'].value;
+  const m = form.elements[which + 'm'].value;
+  if (!h) return '';
+  return `${h}:${m || '00'}`;
+}
+function setTime(form, which, value) {
+  const hs = form.elements[which + 'h'];
+  const ms = form.elements[which + 'm'];
+  if (!value) {
+    hs.value = '';
+    ms.value = '';
+    return;
+  }
+  const [h, m] = String(value).split(':');
+  hs.value = h;
+  if (!Array.from(ms.options).some((o) => o.value === m)) ms.insertAdjacentHTML('beforeend', `<option>${m}</option>`);
+  ms.value = m;
+}
+
+function openEdit(id) {
+  const e = ((STATE && STATE.today.events) || []).find((x) => x.id === id);
+  if (!e) return toast('找不到这条日程，先刷新一下');
+  const f = $('#editForm');
+  f.elements.id.value = e.id;
+  f.elements.title.value = e.title;
+  f.elements.date.value = STATE.today.date;
+  setTime(f, 's', e.start);
+  setTime(f, 'e', e.end);
+  f.elements.category.value = e.category || 'work';
+  f.elements.tags.value = (e.tags || []).join(', ');
+  f.elements.note.value = e.note || '';
+  $('#evModal').hidden = false;
+  f.elements.title.focus();
+  f.elements.title.select();
+}
+
+$('#editForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const f = ev.target;
+  const body = {
+    id: f.elements.id.value,
+    title: f.elements.title.value,
+    date: f.elements.date.value,
+    start: readTime(f, 's'),
+    end: readTime(f, 'e'),
+    category: f.elements.category.value,
+    tags: f.elements.tags.value,
+    note: f.elements.note.value,
+  };
+  try {
+    toast((await api('/event/update', post(body))).message);
+    $('#evModal').hidden = true;
+    await load();
+  } catch (err) { toast('保存失败：' + err.message); }
+});
+
+$('#editCancel').addEventListener('click', () => { $('#evModal').hidden = true; });
+$('#evModal').addEventListener('click', (ev) => { if (ev.target.id === 'evModal') $('#evModal').hidden = true; });
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') $('#evModal').hidden = true; });
+
 $('#tabs').addEventListener('click', (ev) => {
   const btn = ev.target.closest('button[data-tab]');
   if (!btn) return;
@@ -751,6 +890,16 @@ document.addEventListener('click', async (ev) => {
     catch (err) { toast('失败：' + err.message); }
     return;
   }
+  const ed = ev.target.closest('[data-edit]');
+  if (ed) { openEdit(ed.dataset.edit); return; }
+  const dl = ev.target.closest('[data-del]');
+  if (dl) {
+    const e = ((STATE && STATE.today.events) || []).find((x) => x.id === dl.dataset.del);
+    if (!e || !confirm(`删除「${e.title}」？`)) return;
+    try { toast((await api('/event/delete', post({ id: dl.dataset.del }))).message); await load(); }
+    catch (err) { toast('删除失败：' + err.message); }
+    return;
+  }
   const prog = ev.target.closest('[data-progress]');
   if (prog) {
     const body = { id: prog.dataset.progress };
@@ -763,11 +912,20 @@ document.addEventListener('click', async (ev) => {
 
 $('#eventForm').addEventListener('submit', async (ev) => {
   ev.preventDefault();
-  const f = new FormData(ev.target);
-  const body = { title: f.get('title'), start: f.get('start'), end: f.get('end'), category: f.get('category'), tags: f.get('tags') };
+  const f = ev.target;
+  const body = {
+    title: f.elements.title.value,
+    start: readTime(f, 's'),
+    end: readTime(f, 'e'),
+    category: f.elements.category.value,
+    tags: f.elements.tags.value,
+  };
   try {
     toast((await api('/event', post(body))).message);
-    ev.target.reset();
+    f.elements.title.value = '';
+    f.elements.tags.value = '';
+    setTime(f, 's', '');
+    setTime(f, 'e', '');
     await load();
   } catch (err) { toast('失败：' + err.message); }
 });
@@ -814,6 +972,7 @@ $('#reviewBtn').addEventListener('click', async () => {
 });
 
 $('#refresh').addEventListener('click', load);
+fillTimeSelects(document);
 load();
 </script>
 </body>
