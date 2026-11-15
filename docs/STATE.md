@@ -4,7 +4,7 @@
 
 ## 当前版本
 
-- v1.0.0 —— 2026-11-15
+- v1.1.0 —— 2026-11-15（UI 改版：玻璃拟态仪表盘风格）
 - 形态：DSH bundle `@local/dsh-workbench`（host 半注册 HTTP 路由）+ 浏览器单页 + CLI 数据层。
 - 入口：`http://127.0.0.1:51049/workbench`（DSH Web 已启动时）。
 
@@ -14,7 +14,11 @@
   log / done / list / search / check。零依赖，原子写，去 BOM，ISO 周。
 - 数据层：`data/events.jsonl`、`data/notes.jsonl`、`data/goals.json`、`data/reviews/*.md`。
 - Host 半 `index.js`：`/workbench`（页面）、`/workbench/api/{state,search,event,note,goal,progress,done,review}`。
-- UI `ui/index.html`：今日 / 目标 / 记录 / 检索 / 统计五个页签，浅色深色跟随系统。
+- UI `ui/index.html`：左侧图标导航（今日/目标/记录/检索/统计）+ 顶部 KPI 卡片行 +
+  右侧内容区；玻璃卡片、柔和渐变背景、浅色深色跟随系统。统计页含 SVG 折线趋势、
+  conic-gradient 分类环图、每日条形分布、标签投入。
+- UI 设计变量集中在 `ui/index.html` 顶部 `:root`（`--card`、`--brand` `#3056d3`、
+  `--radius: 18px`、`--shadow`；分类色 `CAT_COLORS` 在脚本里）。改配色只动这两处。
 - 文档：`AGENTS.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/DETAIL.md`。
 - 插件元数据：`package.json`、`cordis.patch.yml`、`locale/zh.json`、`locale/en.json`、`icon.svg`。
 
@@ -39,7 +43,7 @@
 
 ## 下一步
 
-1. 日常使用后按周生成复盘（`review week --write`），看是否需要在界面里加趋势图。
+1. 日常使用后按周生成复盘（`review week --write`）；界面趋势图已就绪，观察是否需要按月对比。
 2. 目标周检查提醒：用 DSH 内置 `schedule_create` 每周一推一条消息进会话，不写进本仓库。
 3. 改进流程：`git switch -c feat/xxx` → 改 → `node scripts/wb.mjs check` → 合并回 `main` → push。
 

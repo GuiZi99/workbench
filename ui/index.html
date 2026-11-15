@@ -3,215 +3,499 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>工作台</title>
+<title>工作台 · Workbench</title>
 <style>
   :root {
-    color-scheme: light dark;
-    --bg: #f6f7f9; --panel: #fff; --ink: #1c1f23; --muted: #6b7280; --line: #e5e7eb;
-    --accent: #2563eb; --accent-ink: #fff; --ok: #16a34a; --warn: #dc2626; --chip: #eef2ff;
-    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.1);
+    color-scheme: light;
+    --ink: #0f172a;
+    --ink-2: #1e293b;
+    --muted: #64748b;
+    --muted-2: #94a3b8;
+    --line: rgba(15, 23, 42, .07);
+    --card: rgba(255, 255, 255, .74);
+    --card-2: rgba(255, 255, 255, .55);
+    --brand: #3056d3;
+    --brand-2: #4f7cff;
+    --brand-soft: #e9efff;
+    --ok: #16a34a;
+    --warn: #e11d48;
+    --amber: #f59e0b;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --shadow: 0 12px 32px rgba(23, 37, 84, .08), 0 2px 8px rgba(23, 37, 84, .04);
+    --shadow-sm: 0 4px 14px rgba(23, 37, 84, .06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #16181c; --panel: #1e2126; --ink: #e6e8eb; --muted: #9aa0a6; --line: #2c3036;
-      --accent: #6ba3ff; --accent-ink: #0b1220; --chip: #232a3a;
-      --shadow: 0 1px 2px rgba(0,0,0,.4);
+      color-scheme: dark;
+      --ink: #e9edf7;
+      --ink-2: #dbe3f4;
+      --muted: #93a0b8;
+      --muted-2: #6b7895;
+      --line: rgba(255, 255, 255, .08);
+      --card: rgba(30, 36, 50, .72);
+      --card-2: rgba(30, 36, 50, .5);
+      --brand: #8fb0ff;
+      --brand-2: #6d92ff;
+      --brand-soft: rgba(79, 124, 255, .16);
+      --ok: #4ade80;
+      --warn: #fb7185;
+      --shadow: 0 12px 32px rgba(0, 0, 0, .34);
+      --shadow-sm: 0 4px 14px rgba(0, 0, 0, .26);
     }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 14px/1.6 "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif; }
-  header { position: sticky; top: 0; z-index: 5; background: var(--bg);
-    border-bottom: 1px solid var(--line); padding: 14px 20px 0; }
-  .bar { display: flex; align-items: center; gap: 12px; max-width: 1040px; margin: 0 auto; }
-  h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .3px; }
-  .grow { flex: 1; }
-  .muted { color: var(--muted); }
-  .small { font-size: 12px; }
-  nav { display: flex; gap: 4px; max-width: 1040px; margin: 10px auto 0; overflow-x: auto; }
-  nav button { border: 0; background: none; color: var(--muted); font: inherit; cursor: pointer;
-    padding: 8px 12px; border-bottom: 2px solid transparent; white-space: nowrap; }
-  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
-  main { max-width: 1040px; margin: 0 auto; padding: 18px 20px 60px; }
-  section[hidden] { display: none; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
-  .card h2 { font-size: 13px; text-transform: none; letter-spacing: .2px; color: var(--muted);
-    margin: 0 0 12px; font-weight: 600; }
-  .cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; align-items: start; }
-  @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } }
-  ul { list-style: none; margin: 0; padding: 0; }
-  li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
-  li:last-child { border-bottom: 0; }
-  .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; width: 92px; flex: none; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font: 14px/1.6 "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+    background:
+      radial-gradient(1100px 560px at 6% -8%, #ffd9ec 0%, rgba(255, 217, 236, 0) 58%),
+      radial-gradient(900px 520px at 92% -6%, #d7e4ff 0%, rgba(215, 228, 255, 0) 62%),
+      radial-gradient(900px 620px at 62% 112%, #e4ddff 0%, rgba(228, 221, 255, 0) 62%),
+      linear-gradient(158deg, #f8f9fd 0%, #eef2fb 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background:
+        radial-gradient(1000px 520px at 6% -8%, rgba(120, 76, 160, .35) 0%, transparent 60%),
+        radial-gradient(900px 520px at 92% -6%, rgba(52, 88, 180, .34) 0%, transparent 62%),
+        radial-gradient(900px 620px at 60% 112%, rgba(88, 70, 160, .3) 0%, transparent 62%),
+        linear-gradient(158deg, #12151f 0%, #171b26 100%);
+    }
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 20px;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    align-items: start;
+  }
+
+  /* ---------- 侧栏 ---------- */
+  .sidebar {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    height: calc(100vh - 40px);
+    padding: 18px 14px;
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, .7);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+  @media (prefers-color-scheme: dark) { .sidebar { border-color: var(--line); } }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px 10px; }
+  .brand .logo {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    background: linear-gradient(140deg, #3056d3, #6f92ff);
+    display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px;
+    box-shadow: 0 6px 16px rgba(48, 86, 211, .35);
+  }
+  .brand b { display: block; font-size: 15px; letter-spacing: .2px; }
+  .brand span { display: block; font-size: 10px; color: var(--muted-2); letter-spacing: 1.6px; }
+
+  nav.tabs { display: flex; flex-direction: column; gap: 4px; }
+  nav.tabs button {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 10px 12px; border: 0; border-radius: var(--radius-sm);
+    background: transparent; color: var(--muted); font: inherit; text-align: left; cursor: pointer;
+    transition: background .16s, color .16s, transform .16s;
+  }
+  nav.tabs button svg { width: 17px; height: 17px; flex: none; opacity: .85; }
+  nav.tabs button:hover { background: var(--card-2); color: var(--ink-2); }
+  nav.tabs button[aria-selected="true"] {
+    background: linear-gradient(96deg, var(--brand-soft), rgba(255, 255, 255, .35));
+    color: var(--brand); font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(79, 124, 255, .18);
+  }
+  nav.tabs button[aria-selected="true"] svg { opacity: 1; }
+
+  .side-foot {
+    margin-top: auto; padding: 12px; border-radius: var(--radius-sm);
+    background: var(--card-2); border: 1px solid var(--line);
+  }
+  .side-foot .row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .side-foot .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(22, 163, 74, .16); }
+  .side-foot .state { font-size: 15px; font-weight: 650; color: var(--ink-2); margin: 2px 0 4px; }
+
+  /* ---------- 内容区 ---------- */
+  .content { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .topbar { display: flex; align-items: center; gap: 16px; padding: 4px 2px; flex-wrap: wrap; }
+  .topbar h1 { margin: 0; font-size: 25px; letter-spacing: -.3px; font-weight: 700; }
+  .topbar h1 em { font-style: normal; color: var(--brand); }
+  .topbar p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .top-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px;
+    background: var(--card); border: 1px solid rgba(255, 255, 255, .7);
+    border-radius: 999px; box-shadow: var(--shadow-sm); font-size: 12.5px; color: var(--muted);
+  }
+  @media (prefers-color-scheme: dark) { .pill { border-color: var(--line); } }
+  .pill b { color: var(--ink-2); font-weight: 600; }
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+    background: linear-gradient(140deg, #3056d3, #7c9bff); color: #fff; font-size: 12px; font-weight: 650;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card {
+    background: var(--card); border: 1px solid rgba(255, 255, 255, .7);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(1.35);
+    padding: 18px; min-width: 0;
+  }
+  @media (prefers-color-scheme: dark) { .card { border-color: var(--line); } }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .card-head h2 { margin: 0; font-size: 14.5px; font-weight: 650; letter-spacing: .1px; }
+  .card-head .hint { margin-left: auto; font-size: 11.5px; color: var(--muted-2); }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; }
+  .kpi {
+    display: flex; align-items: center; gap: 13px; padding: 16px 17px;
+    background: var(--card); border: 1px solid rgba(255, 255, 255, .72);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    backdrop-filter: blur(18px) saturate(1.35);
+  }
+  @media (prefers-color-scheme: dark) { .kpi { border-color: var(--line); } }
+  .kpi .ico {
+    width: 42px; height: 42px; flex: none; border-radius: 12px; display: grid; place-items: center;
+    color: #fff; font-size: 17px;
+  }
+  .kpi .ico svg { width: 19px; height: 19px; }
+  .kpi .meta { min-width: 0; }
+  .kpi .label { font-size: 11.5px; color: var(--muted); }
+  .kpi .value { font-size: 23px; font-weight: 700; letter-spacing: -.4px; line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .kpi .value small { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+  .kpi .delta { font-size: 11.5px; color: var(--muted-2); }
+  .kpi .delta b { font-weight: 600; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid.two { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+  .grid.three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  @media (max-width: 1080px) { .grid.two { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: minmax(0, 1fr); }
+    .sidebar { position: static; height: auto; }
+    nav.tabs { flex-direction: row; overflow-x: auto; }
+    nav.tabs button { width: auto; white-space: nowrap; }
+  }
+
+  /* ---------- 列表 ---------- */
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li {
+    display: flex; align-items: center; gap: 10px; padding: 9px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  ul.list li:last-child { border-bottom: 0; }
+  .time {
+    font-variant-numeric: tabular-nums; color: var(--muted); font-size: 11.5px;
+    width: 92px; flex: none; padding: 3px 8px; border-radius: 8px; background: var(--card-2); text-align: center;
+  }
   .title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .title.done { text-decoration: line-through; color: var(--muted); }
-  .chip { background: var(--chip); color: var(--ink); border-radius: 999px; padding: 1px 8px; font-size: 11px; }
-  .chip.cat { background: color-mix(in srgb, var(--accent) 14%, transparent); }
-  button.ghost, button.primary { font: inherit; cursor: pointer; border-radius: 8px; padding: 6px 12px; }
-  button.primary { background: var(--accent); color: var(--accent-ink); border: 1px solid transparent; font-weight: 600; }
-  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
-  button.ghost:hover { border-color: var(--accent); color: var(--accent); }
-  button.mini { padding: 2px 8px; font-size: 12px; }
-  input, select, textarea { font: inherit; color: var(--ink); background: var(--panel);
-    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; }
-  input:focus, select:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 1px; }
-  form .row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
-  form .row > * { flex: 1 1 120px; }
-  form .row > .tight { flex: 0 0 96px; }
-  .grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-  .goal { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
-  .goal .name { font-weight: 600; }
-  .track { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 8px 0 6px; }
-  .fill { height: 100%; background: var(--accent); }
-  .fill.over { background: var(--warn); }
-  .metric { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 14px; }
-  .metric b { display: block; font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
-  .metric span { color: var(--muted); font-size: 12px; }
-  .bars { display: grid; gap: 6px; }
-  .brow { display: grid; grid-template-columns: 52px 1fr 64px; gap: 10px; align-items: center; font-size: 12px; }
-  .btrack { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
-  .btrack i { display: block; height: 100%; background: var(--accent); }
-  .note { border-left: 2px solid var(--accent); padding: 2px 0 2px 10px; margin: 8px 0; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
-  .seg button { border: 0; background: none; color: var(--muted); font: inherit; padding: 6px 14px; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
-  .empty { color: var(--muted); padding: 10px 0; }
-  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%) translateY(20px);
-    background: #111; color: #fff; padding: 9px 16px; border-radius: 10px; font-size: 13px;
-    opacity: 0; pointer-events: none; transition: .18s; max-width: 80vw; z-index: 50; }
-  .toast.show { opacity: .95; transform: translateX(-50%); }
-  .hit { padding: 8px 0; border-bottom: 1px dashed var(--line); }
-  .hit .src { color: var(--muted); font-size: 11px; }
-  a { color: var(--accent); }
+  .chip {
+    background: var(--card-2); border: 1px solid var(--line); color: var(--muted);
+    border-radius: 999px; padding: 1px 9px; font-size: 11px; white-space: nowrap;
+  }
+  .chip.cat { background: var(--brand-soft); color: var(--brand); border-color: transparent; }
+  .chip.ok { background: rgba(22, 163, 74, .12); color: var(--ok); border-color: transparent; }
+
+  button.primary, button.ghost {
+    font: inherit; cursor: pointer; border-radius: 10px; padding: 8px 14px;
+    transition: transform .14s, box-shadow .14s, background .14s;
+  }
+  button.primary {
+    background: linear-gradient(140deg, #3056d3, #527ffe); color: #fff; border: 1px solid transparent;
+    font-weight: 600; box-shadow: 0 8px 18px rgba(48, 86, 211, .26);
+  }
+  button.primary:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(48, 86, 211, .32); }
+  button.ghost { background: var(--card); border: 1px solid var(--line); color: var(--ink-2); }
+  button.ghost:hover { border-color: var(--brand); color: var(--brand); }
+  button.mini { padding: 3px 10px; font-size: 12px; border-radius: 8px; }
+
+  input, select, textarea {
+    font: inherit; color: var(--ink); background: var(--card-2);
+    border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--muted-2); }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--brand-2);
+    box-shadow: 0 0 0 3px rgba(79, 124, 255, .16); background: var(--card);
+  }
+  form .row { display: flex; gap: 9px; margin-bottom: 9px; flex-wrap: wrap; }
+  form .row > * { flex: 1 1 130px; }
+  form .row > .tight { flex: 0 0 104px; }
+  .field-label { font-size: 11px; color: var(--muted-2); margin: 0 0 4px 2px; }
+
+  .goal-card {
+    border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+    background: var(--card-2); display: flex; flex-direction: column; gap: 8px;
+  }
+  .goal-card .name { font-weight: 650; font-size: 13.5px; }
+  .goal-card .sub { font-size: 11.5px; color: var(--muted); }
+  .track { height: 7px; border-radius: 999px; background: rgba(15, 23, 42, .07); overflow: hidden; }
+  @media (prefers-color-scheme: dark) { .track { background: rgba(255, 255, 255, .1); } }
+  .track .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #3056d3, #6f92ff); }
+  .track .fill.over { background: linear-gradient(90deg, #16a34a, #4ade80); }
+  .goal-card .acts { display: flex; gap: 6px; margin-top: 2px; }
+
+  /* ---------- 统计 ---------- */
+  .seg {
+    display: inline-flex; padding: 3px; gap: 3px; background: var(--card-2);
+    border: 1px solid var(--line); border-radius: 999px;
+  }
+  .seg button {
+    border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer;
+    padding: 6px 16px; border-radius: 999px; font-size: 12.5px;
+  }
+  .seg button[aria-pressed="true"] {
+    background: linear-gradient(140deg, #3056d3, #527ffe); color: #fff; font-weight: 600;
+    box-shadow: 0 6px 14px rgba(48, 86, 211, .26);
+  }
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 12px; margin-bottom: 4px; }
+  .metric { padding: 12px 14px; border-radius: 14px; background: var(--card-2); border: 1px solid var(--line); }
+  .metric b { display: block; font-size: 21px; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+  .metric span { font-size: 11.5px; color: var(--muted); }
+
+  .trend { width: 100%; height: 220px; display: block; }
+  .trend .grid { stroke: var(--line); stroke-width: 1; }
+  .trend .line { stroke: var(--brand-2); stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .trend .dot { fill: #fff; stroke: var(--brand-2); stroke-width: 2; }
+  .trend .tick { fill: var(--muted-2); font-size: 10px; text-anchor: middle; }
+
+  .bars { display: grid; gap: 8px; }
+  .brow { display: grid; grid-template-columns: 62px 1fr 66px; gap: 10px; align-items: center; font-size: 12px; }
+  .brow .btrack { height: 8px; border-radius: 999px; background: rgba(15, 23, 42, .07); overflow: hidden; }
+  @media (prefers-color-scheme: dark) { .brow .btrack { background: rgba(255, 255, 255, .1); } }
+  .brow .btrack i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #3056d3, #7aa2ff); }
+  .brow .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .donut {
+    width: 138px; height: 138px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .05);
+  }
+  .donut > span {
+    width: 92px; height: 92px; border-radius: 50%; background: var(--card);
+    display: grid; place-items: center; text-align: center; font-weight: 700; font-size: 16px;
+    line-height: 1.1; box-shadow: var(--shadow-sm);
+  }
+  .donut > span em { display: block; font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--muted); }
+  ul.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; flex: 1; min-width: 150px; }
+  ul.legend li { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  ul.legend li i { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+  ul.legend li b { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
+  ul.legend li em { font-style: normal; color: var(--muted-2); width: 38px; text-align: right; }
+
+  /* ---------- 记录 / 检索 ---------- */
+  .note-item { border-left: 2px solid var(--brand-2); padding: 2px 0 2px 12px; margin: 10px 0; }
+  .note-item .meta { font-size: 11.5px; color: var(--muted-2); }
+  .hit { padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .hit .src { color: var(--muted-2); font-size: 11px; }
+  .empty { color: var(--muted-2); padding: 14px 0; font-size: 12.5px; }
+  .tags-line { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(16px);
+    background: rgba(15, 23, 42, .92); color: #fff; padding: 10px 18px; border-radius: 12px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: .2s; max-width: 80vw; z-index: 60;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .3);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
 </style>
 </head>
 <body>
-<header>
-  <div class="bar">
-    <h1>工作台</h1>
-    <span class="muted small" id="todayLabel"></span>
-    <span class="grow"></span>
-    <button class="ghost mini" id="refresh" title="重新读取数据">刷新</button>
-  </div>
-  <nav role="tablist" id="tabs">
-    <button role="tab" data-tab="today" aria-selected="true">今日</button>
-    <button role="tab" data-tab="goals" aria-selected="false">目标</button>
-    <button role="tab" data-tab="notes" aria-selected="false">记录</button>
-    <button role="tab" data-tab="search" aria-selected="false">检索</button>
-    <button role="tab" data-tab="stats" aria-selected="false">统计</button>
-  </nav>
-</header>
-<main>
-  <!-- 今日 -->
-  <section id="pane-today">
-    <div class="cols">
-      <div class="card">
-        <h2>今日日程</h2>
-        <ul id="todayList"></ul>
-        <div id="todayEmpty" class="empty">今天还没有安排。</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">WB</div>
+      <div><b>工作台</b><span>WORKBENCH</span></div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="today" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        今日
+      </button>
+      <button role="tab" data-tab="goals" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        目标
+      </button>
+      <button role="tab" data-tab="notes" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M14 4v5h5M8 13h8M8 17h5"/></svg>
+        记录
+      </button>
+      <button role="tab" data-tab="search" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        检索
+      </button>
+      <button role="tab" data-tab="stats" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
+        统计
+      </button>
+    </nav>
+    <div class="side-foot">
+      <div class="row"><span class="dot"></span>数据状态</div>
+      <div class="state" id="sideState">正常</div>
+      <div class="row">更新 <span id="sideTime" style="margin-left:auto">--:--</span></div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div>
+        <h1>个人<em>工作台</em></h1>
+        <p>日程 · 目标 · 记录 · 检索 · 年/月/周时间统计</p>
       </div>
-      <div class="card">
-        <h2>快速记录</h2>
-        <form id="eventForm">
-          <div class="row"><input name="title" placeholder="做什么" required></div>
-          <div class="row">
-            <input name="start" class="tight" placeholder="开始 09:00" inputmode="numeric">
-            <input name="end" class="tight" placeholder="结束 10:30" inputmode="numeric">
-            <select name="category">
-              <option value="work">工作</option><option value="study">学习</option>
-              <option value="health">健康</option><option value="life">生活</option>
-              <option value="rest">休息</option><option value="other">其他</option>
-            </select>
+      <div class="top-actions">
+        <span class="pill">📅 <b id="todayLabel">—</b></span>
+        <button class="ghost mini" id="refresh" title="重新读取数据">刷新</button>
+        <div class="avatar">我</div>
+      </div>
+    </header>
+
+    <!-- ========== 今日 ========== -->
+    <section id="pane-today">
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card">
+          <div class="card-head">
+            <h2>今日日程</h2>
+            <span class="hint" id="todayHint"></span>
           </div>
-          <div class="row"><input name="tags" placeholder="标签，逗号分隔"></div>
-          <div class="row"><button class="primary" type="submit">加入今日</button></div>
+          <ul class="list" id="todayList"></ul>
+          <div id="todayEmpty" class="empty" hidden>今天还没有安排。</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>快速记录</h2><span class="hint">回车即存</span></div>
+          <form id="eventForm">
+            <div class="row"><input name="title" placeholder="做什么" required></div>
+            <div class="row">
+              <input name="start" class="tight" placeholder="开始 09:00" inputmode="numeric">
+              <input name="end" class="tight" placeholder="结束 10:30" inputmode="numeric">
+              <select name="category">
+                <option value="work">工作</option><option value="study">学习</option>
+                <option value="health">健康</option><option value="life">生活</option>
+                <option value="rest">休息</option><option value="other">其他</option>
+              </select>
+            </div>
+            <div class="row"><input name="tags" placeholder="标签，逗号分隔"></div>
+            <div class="row"><button class="primary" type="submit">加入今日</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-head"><h2>进行中的目标</h2><span class="hint" id="goalHint"></span></div>
+        <div class="grid three" id="todayGoals"></div>
+      </div>
+    </section>
+
+    <!-- ========== 目标 ========== -->
+    <section id="pane-goals" hidden>
+      <div class="card">
+        <div class="card-head"><h2>新建目标</h2><span class="hint">季度 / 年度 / 月度</span></div>
+        <form id="goalForm">
+          <div class="row"><input name="title" placeholder="目标名称" required></div>
+          <div class="row">
+            <select name="horizon">
+              <option value="quarter">季度</option><option value="year">年度</option><option value="month">月度</option>
+            </select>
+            <input name="target" placeholder="目标值，如 500" inputmode="numeric">
+            <input name="unit" placeholder="单位，如 km" class="tight">
+            <input name="due" placeholder="截止 2026-12-31" class="tight">
+          </div>
+          <div class="row"><input name="why" placeholder="为什么做（一句话）"></div>
+          <div class="row"><button class="primary" type="submit">创建</button></div>
         </form>
       </div>
-    </div>
-    <div class="card">
-      <h2>进行中的目标</h2>
-      <div class="grid2" id="todayGoals"></div>
-    </div>
-  </section>
+      <div class="grid three" id="goalGrid" style="margin-top:16px"></div>
+    </section>
 
-  <!-- 目标 -->
-  <section id="pane-goals" hidden>
-    <div class="card">
-      <h2>新建目标</h2>
-      <form id="goalForm">
-        <div class="row"><input name="title" placeholder="目标名称" required></div>
-        <div class="row">
-          <select name="horizon"><option value="quarter">季度</option><option value="year">年度</option><option value="month">月度</option></select>
-          <input name="target" placeholder="目标值，如 500" inputmode="numeric">
-          <input name="unit" placeholder="单位，如 km" class="tight">
-          <input name="due" placeholder="截止 2026-12-31" class="tight">
-        </div>
-        <div class="row"><input name="why" placeholder="为什么做（一句话）"></div>
-        <div class="row"><button class="primary" type="submit">创建</button></div>
-      </form>
-    </div>
-    <div class="grid2" id="goalGrid"></div>
-  </section>
-
-  <!-- 记录 -->
-  <section id="pane-notes" hidden>
-    <div class="card">
-      <h2>记一条</h2>
-      <form id="noteForm">
-        <div class="row">
-          <select name="kind">
-            <option value="note">记录</option><option value="idea">想法</option>
-            <option value="link">链接</option><option value="quote">引用</option>
-          </select>
-          <input name="tags" placeholder="标签，逗号分隔">
-        </div>
-        <div class="row"><textarea name="text" rows="3" placeholder="写点什么…" required></textarea></div>
-        <div class="row"><button class="primary" type="submit">保存</button></div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>最近记录</h2>
-      <div id="noteList"></div>
-    </div>
-  </section>
-
-  <!-- 检索 -->
-  <section id="pane-search" hidden>
-    <div class="card">
-      <h2>检索全部数据（日程 / 记录 / 目标）</h2>
-      <form id="searchForm"><div class="row"><input name="q" placeholder="输入关键词，回车检索" autocomplete="off"></div></form>
-      <div id="searchResults"></div>
-    </div>
-  </section>
-
-  <!-- 统计 -->
-  <section id="pane-stats" hidden>
-    <div class="card">
-      <div class="seg" id="statsSeg">
-        <button data-range="week" aria-pressed="true">本周</button>
-        <button data-range="month" aria-pressed="false">本月</button>
-        <button data-range="year" aria-pressed="false">今年</button>
+    <!-- ========== 记录 ========== -->
+    <section id="pane-notes" hidden>
+      <div class="card">
+        <div class="card-head"><h2>记一条</h2><span class="hint">记录 / 想法 / 链接 / 引用</span></div>
+        <form id="noteForm">
+          <div class="row">
+            <select name="kind">
+              <option value="note">记录</option><option value="idea">想法</option>
+              <option value="link">链接</option><option value="quote">引用</option>
+            </select>
+            <input name="tags" placeholder="标签，逗号分隔">
+          </div>
+          <div class="row"><textarea name="text" rows="3" placeholder="写点什么…" required></textarea></div>
+          <div class="row"><button class="primary" type="submit">保存</button></div>
+        </form>
       </div>
-      <div class="metric" id="statsMetric"></div>
-      <div class="bars" id="statsCats"></div>
-    </div>
-    <div class="card">
-      <h2>每日分布</h2>
-      <div class="bars" id="statsDays"></div>
-    </div>
-    <div class="card">
-      <h2>标签投入</h2>
-      <div id="statsTags" class="muted small"></div>
-      <div class="row" style="margin-top:14px"><button class="ghost" id="reviewBtn">生成本期复盘 Markdown</button></div>
-    </div>
-  </section>
-</main>
+      <div class="card" style="margin-top:16px">
+        <div class="card-head"><h2>最近记录</h2><span class="hint" id="noteHint"></span></div>
+        <div id="noteList"></div>
+      </div>
+    </section>
+
+    <!-- ========== 检索 ========== -->
+    <section id="pane-search" hidden>
+      <div class="card">
+        <div class="card-head"><h2>检索全部数据</h2><span class="hint">日程 / 记录 / 目标</span></div>
+        <form id="searchForm">
+          <div class="row"><input name="q" placeholder="输入关键词，回车检索" autocomplete="off"></div>
+        </form>
+        <div id="searchResults"></div>
+      </div>
+    </section>
+
+    <!-- ========== 统计 ========== -->
+    <section id="pane-stats" hidden>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="seg" id="statsSeg">
+          <button data-range="week" aria-pressed="true">本周</button>
+          <button data-range="month" aria-pressed="false">本月</button>
+          <button data-range="year" aria-pressed="false">今年</button>
+        </div>
+        <span class="pill" id="statsRange">—</span>
+      </div>
+      <div class="kpi-row" id="statsKpi"></div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card">
+          <div class="card-head"><h2>投入趋势</h2><span class="hint">每日投入时长</span></div>
+          <div id="statsTrend"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>分类占比</h2><span class="hint">按小时</span></div>
+          <div id="statsCats"></div>
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:16px">
+        <div class="card">
+          <div class="card-head"><h2>每日分布</h2><span class="hint">按天排序</span></div>
+          <div class="bars" id="statsDays"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>标签投入</h2><span class="hint">本期</span></div>
+          <div class="tags-line" id="statsTags"></div>
+          <div style="margin-top:16px"><button class="ghost" id="reviewBtn">生成本期复盘 Markdown</button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
 const $ = (s) => document.querySelector(s);
 const CAT_CN = { work: '工作', study: '学习', health: '健康', life: '生活', rest: '休息', other: '其他' };
+const CAT_COLORS = { work: '#3056d3', study: '#4f7cff', health: '#16a34a', life: '#f59e0b', rest: '#a855f7', other: '#94a3b8' };
+const RANGE_CN = { week: '本周', month: '本月', year: '今年' };
 let STATE = null;
 let RANGE = 'week';
 let TAB = 'today';
@@ -233,53 +517,108 @@ async function api(path, options) {
   return data;
 }
 
+function post(body) {
+  return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+}
+
 async function load() {
   try {
     STATE = await api('/state');
   } catch (err) {
+    $('#sideState').textContent = '读取失败';
     toast('读取失败：' + err.message);
     return;
   }
+  $('#sideState').textContent = '正常';
+  $('#sideTime').textContent = new Date().toTimeString().slice(0, 5);
   $('#todayLabel').textContent = STATE.today.date + ' 周' + STATE.today.weekday;
+  renderKpi();
   renderToday();
   renderGoals();
   renderNotes();
   renderStats();
 }
 
-function fmtH(h) { return (Math.round(h * 10) / 10).toFixed(1) + 'h'; }
-function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const fmtH = (h) => (Math.round(h * 10) / 10).toFixed(1) + 'h';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sumHours = (evs) => evs.reduce((s, e) => s + (e.hours || 0), 0);
+
+function kpiCard(icon, color, label, value, unit, delta) {
+  return `<div class="kpi">
+    <div class="ico" style="background:linear-gradient(140deg, ${color}, ${color}bb)">${icon}</div>
+    <div class="meta">
+      <div class="label">${label}</div>
+      <div class="value">${value}${unit ? `<small>${unit}</small>` : ''}</div>
+      <div class="delta">${delta}</div>
+    </div>
+  </div>`;
+}
+
+const ICONS = {
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.6L16 9.6"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 17l5-6 4 4 7-9"/></svg>',
+};
+
+function renderKpi() {
+  const t = STATE.today;
+  const w = STATE.week;
+  const todayH = sumHours(t.events);
+  const doneToday = t.events.filter((e) => e.status === 'done').length;
+  const activeGoals = STATE.goals.filter((g) => g.status === 'active').length;
+  const rate = w.count ? Math.round((w.done / w.count) * 100) : 0;
+  $('#kpiRow').innerHTML = [
+    kpiCard(ICONS.clock, '#3056d3', '今日投入', fmtH(todayH).replace('h', ''), 'h',
+      `日程 <b>${t.events.length}</b> 条 · 完成 <b>${doneToday}</b> 条`),
+    kpiCard(ICONS.list, '#4f7cff', '本周投入', fmtH(w.total).replace('h', ''), 'h',
+      `<b>${w.label}</b> · 日程 ${w.count} 条`),
+    kpiCard(ICONS.check, '#16a34a', '本周完成率', rate, '%',
+      `完成 <b>${w.done}</b> / 共 <b>${w.count}</b> 条`),
+    kpiCard(ICONS.target, '#f59e0b', '进行中目标', activeGoals, '个',
+      `记录 <b>${STATE.notes.length}</b> 条`),
+    kpiCard(ICONS.spark, '#a855f7', '本月投入', fmtH(STATE.month.total).replace('h', ''), 'h',
+      `日均 <b>${activeDays(STATE.month) ? fmtH(STATE.month.total / activeDays(STATE.month)) : '0h'}</b>`),
+  ].join('');
+  $('#todayHint').textContent = t.events.length ? `合计 ${fmtH(todayH)}` : '';
+  $('#goalHint').textContent = activeGoals ? `${activeGoals} 个推进中` : '';
+}
+
+function activeDays(s) { return Object.keys(s.byDay || {}).length; }
 
 /* ---------- 今日 ---------- */
 function renderToday() {
   const t = STATE.today;
-  const list = $('#todayList');
-  list.innerHTML = t.events.map((e) => `
+  $('#todayList').innerHTML = t.events.map((e) => `
     <li>
       <span class="time">${e.start ? esc(e.start) + '–' + esc(e.end || '') : '待定'}</span>
       <span class="title ${e.status === 'done' ? 'done' : ''}">${esc(e.title)}</span>
       <span class="chip cat">${CAT_CN[e.category] || e.category}</span>
       ${e.tags.map((x) => `<span class="chip">${esc(x)}</span>`).join('')}
       ${e.status === 'done'
-        ? '<span class="chip">已完成</span>'
+        ? '<span class="chip ok">已完成</span>'
         : `<button class="ghost mini" data-done="${esc(e.id)}">完成</button>`}
     </li>`).join('');
   $('#todayEmpty').hidden = t.events.length > 0;
 
   const goals = t.goals;
-  $('#todayGoals').innerHTML = goals.length ? goals.map(goalCard).join('') : '<div class="empty">没有进行中的目标。</div>';
+  $('#todayGoals').innerHTML = goals.length
+    ? goals.map((g) => goalCard(g, true)).join('')
+    : '<div class="empty">没有进行中的目标。</div>';
 }
 
-function goalCard(g) {
-  const pct = g.pct === null ? null : Math.min(100, g.pct);
-  return `<div class="goal">
-    <div class="name">${esc(g.title)}</div>
-    <div class="muted small">${g.progress}/${g.target ?? '?'}${esc(g.unit)}${g.due ? ' · 截止 ' + esc(g.due) : ''}${g.overdue ? ' · <b style="color:var(--warn)">逾期</b>' : ''}</div>
+function goalCard(g, withActions) {
+  const pct = g.pct === null || g.pct === undefined ? null : Math.min(100, g.pct);
+  return `<div class="goal-card">
+    <div class="name">${esc(g.title)}${g.status === 'done' ? ' <span class="chip ok">达成</span>' : ''}</div>
+    <div class="sub">${g.horizon ? esc(g.horizon) + ' · ' : ''}${g.progress || 0}/${g.target ?? '?'}${esc(g.unit || '')}${g.due ? ' · 截止 ' + esc(g.due) : ''}${g.overdue ? ' · <b style="color:var(--warn)">逾期</b>' : ''}</div>
     ${pct === null ? '' : `<div class="track"><div class="fill ${pct >= 100 ? 'over' : ''}" style="width:${pct}%"></div></div>`}
-    <div class="row" style="margin-top:10px;display:flex;gap:6px">
+    ${g.why ? `<div class="sub">${esc(g.why)}</div>` : ''}
+    <div class="acts">
       <button class="ghost mini" data-progress="${esc(g.id)}" data-add="1">+1</button>
       <button class="ghost mini" data-progress="${esc(g.id)}" data-add="5">+5</button>
-      <button class="ghost mini" data-progress="${esc(g.id)}" data-set="0">清零</button>
+      ${withActions ? `<button class="ghost mini" data-progress="${esc(g.id)}" data-set="0">清零</button>` : ''}
     </div>
   </div>`;
 }
@@ -288,28 +627,17 @@ function goalCard(g) {
 function renderGoals() {
   const goals = STATE.goals || [];
   $('#goalGrid').innerHTML = goals.length
-    ? goals.map((g) => {
-        const pct = g.target ? Math.min(100, Math.round(((g.progress || 0) / g.target) * 100)) : null;
-        return `<div class="goal">
-          <div class="name">${esc(g.title)} ${g.status === 'done' ? '<span class="chip">达成</span>' : ''}</div>
-          <div class="muted small">${esc(g.horizon || '')} · ${g.progress || 0}/${g.target ?? '?'}${esc(g.unit || '')}${g.due ? ' · 截止 ' + esc(g.due) : ''}</div>
-          ${pct === null ? '' : `<div class="track"><div class="fill" style="width:${pct}%"></div></div>`}
-          ${g.why ? `<div class="muted small">${esc(g.why)}</div>` : ''}
-          <div style="margin-top:10px;display:flex;gap:6px">
-            <button class="ghost mini" data-progress="${esc(g.id)}" data-add="1">+1</button>
-            <button class="ghost mini" data-progress="${esc(g.id)}" data-add="5">+5</button>
-          </div>
-        </div>`;
-      }).join('')
-    : '<div class="empty">还没有目标。</div>';
+    ? goals.map((g) => goalCard(g, true)).join('')
+    : '<div class="card"><div class="empty">还没有目标。</div></div>';
 }
 
 /* ---------- 记录 ---------- */
 function renderNotes() {
   const notes = STATE.notes || [];
+  $('#noteHint').textContent = notes.length ? `共 ${notes.length} 条` : '';
   $('#noteList').innerHTML = notes.length
-    ? notes.map((n) => `<div class="note">
-        <div class="small muted">${esc((n.ts || '').replace('T', ' ').slice(0, 16))} · ${esc(n.kind || 'note')}${(n.tags || []).length ? ' · ' + n.tags.map(esc).join(' ') : ''}</div>
+    ? notes.map((n) => `<div class="note-item">
+        <div class="meta">${esc((n.ts || '').replace('T', ' ').slice(0, 16))} · ${esc(n.kind || 'note')}${(n.tags || []).length ? ' · ' + n.tags.map(esc).join(' ') : ''}</div>
         <div>${esc(n.text)}</div>
       </div>`).join('')
     : '<div class="empty">还没有记录。</div>';
@@ -319,33 +647,84 @@ function renderNotes() {
 function renderStats() {
   const s = STATE[RANGE];
   if (!s) return;
-  const activeDays = Object.keys(s.byDay || {}).length;
-  $('#statsMetric').innerHTML = `
-    <div><b>${fmtH(s.total || 0)}</b><span>总投入</span></div>
-    <div><b>${s.count || 0}</b><span>日程数</span></div>
-    <div><b>${s.count ? Math.round(((s.done || 0) / s.count) * 100) : 0}%</b><span>完成率</span></div>
-    <div><b>${activeDays}</b><span>活跃天数</span></div>
-    <div><b>${activeDays ? fmtH((s.total || 0) / activeDays) : '0h'}</b><span>日均</span></div>`;
+  $('#statsRange').textContent = `${s.label} · ${s.from} ~ ${s.to}`;
+  const days = activeDays(s);
+  const rate = s.count ? Math.round((s.done / s.count) * 100) : 0;
+  $('#statsKpi').innerHTML = [
+    kpiCard(ICONS.clock, '#3056d3', '总投入', fmtH(s.total).replace('h', ''), 'h', `平均 ${days ? fmtH(s.total / days) : '0h'}/天`),
+    kpiCard(ICONS.list, '#4f7cff', '日程数', s.count, '条', `完成 <b>${s.done}</b> 条`),
+    kpiCard(ICONS.check, '#16a34a', '完成率', rate, '%', `活跃 <b>${days}</b> 天`),
+    kpiCard(ICONS.target, '#f59e0b', '日均投入', days ? fmtH(s.total / days).replace('h', '') : '0', 'h', `覆盖 ${s.from} ~ ${s.to}`),
+  ].join('');
 
-  const cats = s.byCat || [];
-  const max = cats.length ? cats[0][1] : 0;
-  $('#statsCats').innerHTML = cats.length
-    ? cats.map(([c, h]) => `<div class="brow"><span>${CAT_CN[c] || esc(c)}</span>
-        <span class="btrack"><i style="width:${max ? (h / max) * 100 : 0}%"></i></span>
-        <span class="muted" style="text-align:right">${fmtH(h)}</span></div>`).join('')
-    : '<div class="empty">本期没有日程。</div>';
+  $('#statsTrend').innerHTML = trendSvg(Object.entries(s.byDay || {}).sort((a, b) => a[0].localeCompare(b[0])));
+  $('#statsCats').innerHTML = donut(s.byCat || []);
 
-  const days = Object.entries(s.byDay || {}).sort((a, b) => a[0].localeCompare(b[0]));
-  const dmax = days.reduce((m, [, h]) => Math.max(m, h), 0);
-  $('#statsDays').innerHTML = days.length
-    ? days.map(([d, h]) => `<div class="brow"><span>${esc(d.slice(5))}</span>
+  const dl = Object.entries(s.byDay || {}).sort((a, b) => a[0].localeCompare(b[0]));
+  const dmax = dl.reduce((m, [, h]) => Math.max(m, h), 0);
+  $('#statsDays').innerHTML = dl.length
+    ? dl.map(([d, h]) => `<div class="brow"><span>${esc(d.slice(5))}</span>
         <span class="btrack"><i style="width:${dmax ? (h / dmax) * 100 : 0}%"></i></span>
-        <span class="muted" style="text-align:right">${fmtH(h)}</span></div>`).join('')
+        <span class="val">${fmtH(h)}</span></div>`).join('')
     : '<div class="empty">本期没有记录。</div>';
 
   $('#statsTags').innerHTML = (s.byTag || []).length
-    ? '标签投入：' + s.byTag.map(([t, h]) => `<span class="chip">${esc(t)} ${fmtH(h)}</span>`).join(' ')
-    : '暂无标签数据。';
+    ? s.byTag.map(([t, h]) => `<span class="chip">${esc(t)} · ${fmtH(h)}</span>`).join('')
+    : '<span class="empty">暂无标签数据。</span>';
+}
+
+function trendSvg(entries) {
+  if (!entries.length) return '<div class="empty">本期没有数据。</div>';
+  const W = 760, H = 220, P = 26, iw = W - P * 2, ih = H - P * 2 - 16;
+  const max = Math.max(...entries.map((e) => e[1]), 1);
+  const n = entries.length;
+  const x = (i) => P + (n === 1 ? iw / 2 : (i * iw) / (n - 1));
+  const y = (v) => P + ih - (v / max) * ih;
+  const pts = entries.map((e, i) => [x(i), y(e[1])]);
+  const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = `${line} L ${pts[pts.length - 1][0].toFixed(1)} ${(P + ih).toFixed(1)} L ${pts[0][0].toFixed(1)} ${(P + ih).toFixed(1)} Z`;
+  const grid = [0, .25, .5, .75, 1].map((f) => {
+    const yy = (P + ih * f).toFixed(1);
+    return `<line class="grid" x1="${P}" y1="${yy}" x2="${W - P}" y2="${yy}"/>`;
+  }).join('');
+  const dots = pts.map((p) => `<circle class="dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.1"/>`).join('');
+  const step = Math.max(1, Math.ceil(n / 8));
+  const labels = entries.map((e, i) => (i % step === 0 || i === n - 1)
+    ? `<text class="tick" x="${x(i).toFixed(1)}" y="${H - 5}">${esc(e[0].slice(5))}</text>` : '').join('');
+  return `<svg class="trend" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="wbArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(79,124,255,.30)"/>
+        <stop offset="100%" stop-color="rgba(79,124,255,0)"/>
+      </linearGradient>
+    </defs>
+    ${grid}
+    <path d="${area}" fill="url(#wbArea)"/>
+    <path class="line" d="${line}"/>
+    ${dots}
+    ${labels}
+  </svg>`;
+}
+
+function donut(cats) {
+  const total = cats.reduce((s, c) => s + c[1], 0);
+  if (!total) return '<div class="empty">本期没有日程。</div>';
+  let acc = 0;
+  const stops = cats.map(([k, h]) => {
+    const from = (acc / total) * 360;
+    acc += h;
+    const to = (acc / total) * 360;
+    return `${CAT_COLORS[k] || '#94a3b8'} ${from.toFixed(1)}deg ${to.toFixed(1)}deg`;
+  }).join(',');
+  const legend = cats.map(([k, h]) => `<li>
+      <i style="background:${CAT_COLORS[k] || '#94a3b8'}"></i>
+      <span>${CAT_CN[k] || esc(k)}</span>
+      <b>${fmtH(h)}</b><em>${Math.round((h / total) * 100)}%</em>
+    </li>`).join('');
+  return `<div class="donut-wrap">
+    <div class="donut" style="background:conic-gradient(${stops})"><span>${fmtH(total)}<em>总投入</em></span></div>
+    <ul class="legend">${legend}</ul>
+  </div>`;
 }
 
 /* ---------- 交互 ---------- */
@@ -354,7 +733,7 @@ $('#tabs').addEventListener('click', (ev) => {
   if (!btn) return;
   TAB = btn.dataset.tab;
   for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', String(b === btn));
-  for (const s of document.querySelectorAll('main > section')) s.hidden = s.id !== 'pane-' + TAB;
+  for (const s of document.querySelectorAll('main > section, .content > section')) s.hidden = s.id !== 'pane-' + TAB;
 });
 
 $('#statsSeg').addEventListener('click', (ev) => {
@@ -381,10 +760,6 @@ document.addEventListener('click', async (ev) => {
     catch (err) { toast('失败：' + err.message); }
   }
 });
-
-function post(body) {
-  return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
-}
 
 $('#eventForm').addEventListener('submit', async (ev) => {
   ev.preventDefault();
@@ -427,7 +802,7 @@ $('#searchForm').addEventListener('submit', async (ev) => {
   try {
     const hits = await api('/search?q=' + encodeURIComponent(q));
     box.innerHTML = hits.length
-      ? `<div class="muted small">${hits.length} 条命中</div>` + hits.map((h) => `<div class="hit">
+      ? `<div class="empty" style="padding-top:10px">${hits.length} 条命中</div>` + hits.map((h) => `<div class="hit">
           <div class="src">${esc(h.at)}</div><div>${esc(h.text)}</div></div>`).join('')
       : '<div class="empty">没有命中。</div>';
   } catch (err) { box.innerHTML = `<div class="empty">失败：${esc(err.message)}</div>`; }

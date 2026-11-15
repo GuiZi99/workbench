@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-workbench",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "自用工作台：日程、目标、记录、检索与年/月/周时间统计，数据即文件（JSONL + Markdown），随 git 版本化。",
   "type": "module",
