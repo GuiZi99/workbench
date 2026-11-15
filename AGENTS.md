@@ -30,7 +30,7 @@ workbench/
   ui/index.html          浏览器端单页（今日/目标/记录/检索/统计）
   data/events.jsonl      日程，一行一条
   data/notes.jsonl       记录，一行一条
-  data/goals.json        目标数组
+  data/goals.json        目标对象 `{version,goals:[...]}`
   data/reviews/*.md      复盘 Markdown
 ```
 
@@ -79,3 +79,6 @@ Host 半改动（`index.js`）需要重启 DSH 才生效；`ui/index.html` 与 `
 - `npm` 在本机被执行策略拦，脚本里用 `npm.cmd`（本仓库不需要 npm，零依赖）。
 - 写 JSONL 必须原子（`.tmp` + rename），并发读时不要截断文件。
 - 不要手工编辑 `data/*.jsonl` 的时间戳字段，`created` 只写一次。
+- 远程是 `git@github.com:GuiZi99/workbench.git`。`git push` 会调 ssh，在 workspace-write
+  沙箱下报 `couldn't create signal pipe, Win32 error 5`，需要提到 `danger-full-access` 才能推。
+- `data/goals.json` 的结构是 `{ "version": 1, "goals": [...] }`，不是裸数组（`readGoals` 兼容裸数组，但写回会转成对象）。

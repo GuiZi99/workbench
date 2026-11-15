@@ -28,11 +28,20 @@
   `index.js` 需要重启 DSH）。
 - seed 数据已清空，仓库首条提交是干净状态。
 
+## 远程仓库
+
+- `origin` = `git@github.com:GuiZi99/workbench.git`（私有，SSH）。
+- 分支 `main` 已跟踪 `origin/main`，2026-11-15 首次推送成功并验证远端 HEAD 一致。
+- 提交身份：`GuiZi99 <GuiZi99@users.noreply.github.com>`（本机全局 git 配置已同步改为此）。
+- 沙箱注意：`git push` 会调 ssh，在 workspace-write 模式下报
+  `ssh.exe: fatal error - couldn't create signal pipe, Win32 error 5`，
+  需要提权到 `danger-full-access` 才能推。
+
 ## 下一步
 
-1. GitHub 私有仓库（SSH）推送：需先在 GitHub 添加 `~/.ssh/id_ed25519.pub` 公钥并建空仓库。
-2. 日常使用后按周生成复盘（`review week --write`），看是否需要在界面里加趋势图。
-3. 目标周检查提醒：用 DSH 内置 `schedule_create` 每周一推一条消息进会话，不写进本仓库。
+1. 日常使用后按周生成复盘（`review week --write`），看是否需要在界面里加趋势图。
+2. 目标周检查提醒：用 DSH 内置 `schedule_create` 每周一推一条消息进会话，不写进本仓库。
+3. 改进流程：`git switch -c feat/xxx` → 改 → `node scripts/wb.mjs check` → 合并回 `main` → push。
 
 ## 备份 / 待办
 
