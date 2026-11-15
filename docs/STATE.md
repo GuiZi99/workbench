@@ -18,11 +18,21 @@
 - 文档：`AGENTS.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/DETAIL.md`。
 - 插件元数据：`package.json`、`cordis.patch.yml`、`locale/zh.json`、`locale/en.json`、`icon.svg`。
 
-## 进行中 / 下一步
+## 已安装 / 已验证（2026-11-15）
 
-1. `git init` + 首次提交 + GitHub 私有仓库（SSH）推送。
-2. 安装 bundle 到 desktop profile 并验证 `/workbench/api/state` 返回 200。
-3. 清掉 seed 数据（`data/` 里的示例日程/目标/笔记），换成真实使用。
+- 安装方式：`install_bundle` 以 `link:` 指向本目录，profile `desktop` 的 `dsh.profile.bundles`
+  末尾追加了 `@local/dsh-workbench`；pnpm 建立符号链接 `profiles/desktop/node_modules/@local/dsh-workbench`。
+- 验证：`GET /workbench` → 200（19875 字节）；`GET /workbench/api/state` → 200；
+  `/event`、`/goal`、`/note`、`/progress`、`/done`、`/review`、`/search` 全部 200 且数据正确写入。
+- 链接安装意味着**改本目录文件即时生效**（`ui/index.html`、`scripts/wb.mjs` 无需重启；
+  `index.js` 需要重启 DSH）。
+- seed 数据已清空，仓库首条提交是干净状态。
+
+## 下一步
+
+1. GitHub 私有仓库（SSH）推送：需先在 GitHub 添加 `~/.ssh/id_ed25519.pub` 公钥并建空仓库。
+2. 日常使用后按周生成复盘（`review week --write`），看是否需要在界面里加趋势图。
+3. 目标周检查提醒：用 DSH 内置 `schedule_create` 每周一推一条消息进会话，不写进本仓库。
 
 ## 备份 / 待办
 
