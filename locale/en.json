@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Workbench",
+    "description": "A personal workbench for today's schedule, goal progress, quick notes, full-text search and weekly/monthly/yearly time stats. Data lives as JSONL and Markdown inside the git repo."
+  }
+}

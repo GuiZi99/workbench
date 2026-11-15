@@ -1,0 +1,11 @@
+# 依赖（本仓库零依赖，仅防误提交）
+node_modules/
+
+# 原子写临时文件
+*.tmp
+*.bak
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini

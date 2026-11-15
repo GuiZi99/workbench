@@ -1,0 +1,31 @@
+{
+  "name": "@local/dsh-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "自用工作台：日程、目标、记录、检索与年/月/周时间统计，数据即文件（JSONL + Markdown），随 git 版本化。",
+  "type": "module",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "scripts",
+    "ui",
+    "locale",
+    "docs",
+    "icon.svg",
+    "AGENTS.md",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "license": "MIT"
+}

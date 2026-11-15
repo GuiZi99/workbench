@@ -1,0 +1,6 @@
+# DSH bundle patch —— 挂载工作台本体（host 半）。
+# 安装后 DSH 启动时把这一行插入 Web profile 的配置树；
+# 插件的 apply() 会向 dsh-host-webserver 注册 /workbench 与 /workbench/api。
+- insert:
+    - id: workbench
+      name: '@local/dsh-workbench'
