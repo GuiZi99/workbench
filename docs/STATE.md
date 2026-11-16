@@ -4,6 +4,7 @@
 
 ## 当前版本
 
+- v1.4.0 —— 2026-11-16（统计口径：只有「已完成」的日程才计入投入工时）
 - v1.3.0 —— 2026-11-16（新增「日程」历史页：跨日期查看 / 检索 / 改 / 删）
 - v1.2.0 —— 2026-11-15（日程可改可删；时间改为小时/分钟下拉选择）
 - v1.1.0 —— 2026-11-15（UI 改版：玻璃拟态仪表盘风格）
@@ -22,6 +23,10 @@
   `--all` 不限；`--q` 匹配标题/备注/标签/分类）；`list goals|notes [--json]`。
   id 支持前缀/后缀匹配。
 - 数据层：`data/events.jsonl`、`data/notes.jsonl`、`data/goals.json`、`data/reviews/*.md`。
+- **统计口径（v1.4.0 起）**：只有 `status === 'done'` 的日程计入投入工时
+  （`summarize()` 里 `doneEvents` 过滤后算 `total` / `byCat` / `byTag` / `byDay`）；
+  `count` 仍是该周期全部日程数，`done` 是已完工数。KPI、统计页、复盘 Markdown、
+  日程历史页的每日合计都用这个口径，未点「完成」的日程只占数、不计时。
 - Host 半 `index.js`：`/workbench`（页面）、`/workbench/api/{state,search,event,event/update,event/delete,note,goal,progress,done,review}`。
 - UI `ui/index.html`：左侧图标导航（今日/目标/记录/检索/统计）+ 顶部 KPI 卡片行 +
   右侧内容区；玻璃卡片、柔和渐变背景、浅色深色跟随系统。统计页含 SVG 折线趋势、

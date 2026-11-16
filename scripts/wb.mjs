@@ -134,13 +134,15 @@ function parseArgs(argv) {
 const tags = (v) => (v && v !== true ? String(v).split(',').map((s) => s.trim()).filter(Boolean) : []);
 
 /* ---------- 统计 ---------- */
+// 口径：只有「已完成」(status=done) 的日程才计入投入工时；未完成的只在 count 里占数。
 function summarize(events, from, to) {
   const inRange = events.filter((e) => e.date >= from && e.date <= to && !e.deleted);
+  const doneEvents = inRange.filter((e) => e.status === 'done');
   let total = 0;
   const byCat = {};
   const byTag = {};
   const byDay = {};
-  for (const e of inRange) {
+  for (const e of doneEvents) {
     const h = hours(e);
     total += h;
     const cat = e.category || 'work';
@@ -148,9 +150,8 @@ function summarize(events, from, to) {
     byDay[e.date] = (byDay[e.date] || 0) + h;
     for (const t of e.tags || []) byTag[t] = (byTag[t] || 0) + h;
   }
-  const done = inRange.filter((e) => e.status === 'done').length;
   const sorted = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]);
-  return { count: inRange.length, done, total, byCat: sorted(byCat), byTag: sorted(byTag), byDay, events: inRange };
+  return { count: inRange.length, done: doneEvents.length, total, byCat: sorted(byCat), byTag: sorted(byTag), byDay, events: inRange };
 }
 const fmtH = (h) => (h >= 10 ? h.toFixed(1) : h.toFixed(1)) + 'h';
 function bar(value, max, width = 12) {
@@ -161,7 +162,7 @@ function bar(value, max, width = 12) {
 function printSummary(sum, r) {
   const lines = [];
   lines.push(`■ ${r.label}  ${r.from} ~ ${r.to}`);
-  lines.push(`总时长 ${fmtH(sum.total)} / 日程 ${sum.count} 条 / 完成 ${sum.done} 条` + (sum.count ? ` (${Math.round((sum.done / sum.count) * 100)}%)` : ''));
+  lines.push(`已完工时 ${fmtH(sum.total)} / 日程 ${sum.count} 条 / 完成 ${sum.done} 条` + (sum.count ? ` (${Math.round((sum.done / sum.count) * 100)}%)` : ''));
   const max = sum.byCat.length ? sum.byCat[0][1] : 0;
   if (sum.byCat.length) {
     lines.push('· 分类');
@@ -313,7 +314,7 @@ const cmds = {
     const notes = readLines(F.notes).filter((n) => (n.ts || '').slice(0, 10) >= r.from && (n.ts || '').slice(0, 10) <= r.to);
     const L = [];
     L.push(`# ${r.label} 复盘`, '', `> ${r.from} ~ ${r.to}`, '');
-    L.push('## 时间', '', `- 总时长 ${fmtH(sum.total)}，日程 ${sum.count} 条，完成 ${sum.done} 条`);
+    L.push('## 时间', '', `- 已完工时 ${fmtH(sum.total)}，日程 ${sum.count} 条，完成 ${sum.done} 条`);
     for (const [c, h] of sum.byCat) L.push(`- ${CAT_CN[c] || c}：${fmtH(h)}（${Math.round((h / sum.total) * 100 || 0)}%）`);
     if (sum.byTag.length) L.push(`- 标签：${sum.byTag.slice(0, 8).map(([t, h]) => `${t} ${fmtH(h)}`).join('、')}`);
     L.push('', '## 目标', '');
