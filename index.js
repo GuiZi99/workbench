@@ -91,6 +91,14 @@ async function api(req, res) {
       if (r.code !== 0) return send(res, 500, { ok: false, message: r.stderr || 'search 失败' });
       return send(res, 200, r.stdout, 'application/json; charset=utf-8');
     }
+    if (req.method === 'GET' && route === '/events') {
+      const sp = url.searchParams;
+      const limit = Number(sp.get('limit')) || 200;
+      const tail = sp.get('all') ? ['--all'] : ['--limit', String(limit)];
+      const r = await run(['list', 'events', '--json', ...args(['from', sp.get('from')], ['to', sp.get('to')], ['q', sp.get('q')]), ...tail]);
+      if (r.code !== 0) return send(res, 500, { ok: false, message: r.stderr || 'events 失败' });
+      return send(res, 200, r.stdout, 'application/json; charset=utf-8');
+    }
     if (req.method !== 'POST') return send(res, 405, { ok: false, message: '方法不允许' });
 
     const body = await readJson(req);

@@ -4,6 +4,7 @@
 
 ## 当前版本
 
+- v1.3.0 —— 2026-11-16（新增「日程」历史页：跨日期查看 / 检索 / 改 / 删）
 - v1.2.0 —— 2026-11-15（日程可改可删；时间改为小时/分钟下拉选择）
 - v1.1.0 —— 2026-11-15（UI 改版：玻璃拟态仪表盘风格）
 - 形态：DSH bundle `@local/dsh-workbench`（host 半注册 HTTP 路由）+ 浏览器单页 + CLI 数据层。
@@ -17,7 +18,9 @@
     时间用 `HH:MM` 校验（越界/非法直接报错），`--end` 早于 `--start` 报错，空字符串表示清空。
   - `del <id>`：日程软删除（`deleted`+`deletedAt`，统计与检索自动跳过）、记录物理删除、
     目标改 `status='dropped'`（UI 目标列表只显示 active）。
-  - `list events|goals|notes [--json]`；id 支持前缀/后缀匹配。
+  - `list events [--from D] [--to D] [--q 词] [--limit N | --all] [--json]`（默认 20 条，
+  `--all` 不限；`--q` 匹配标题/备注/标签/分类）；`list goals|notes [--json]`。
+  id 支持前缀/后缀匹配。
 - 数据层：`data/events.jsonl`、`data/notes.jsonl`、`data/goals.json`、`data/reviews/*.md`。
 - Host 半 `index.js`：`/workbench`（页面）、`/workbench/api/{state,search,event,event/update,event/delete,note,goal,progress,done,review}`。
 - UI `ui/index.html`：左侧图标导航（今日/目标/记录/检索/统计）+ 顶部 KPI 卡片行 +
@@ -27,6 +30,11 @@
   起止时间、分类、标签、备注），Esc / 点遮罩可关闭；时间输入是小时 + 分钟两个 `<select>`
   （`fillTimeSelects()` 生成 24 小时 × 5 分钟步进，`readTime()` 读值，`setTime()` 回填）。
   「删」走 `confirm()` 后软删除。
+- 日程历史页（tab `schedule`，`#pane-schedule`）：起止日期 + 关键词 + 预设
+  （本周 / 本月 / 上月 / 近 30 天 / 全部）+「回到今天」；结果按日期倒序分组，每组显示
+  条数与合计时长，行内同样带「完成 / 改 / 删」。数据走 `GET /workbench/api/events`
+  → `list events --json`。`openEdit()` / 删除确认用 `allEvents()`（今日 + 历史两份合并按 id 查），
+  所以历史日程也能直接改（含改日期改到别的日子）。数据改动后统一走 `refreshAll()`。
 - UI 设计变量集中在 `ui/index.html` 顶部 `:root`（`--card`、`--brand` `#3056d3`、
   `--radius: 18px`、`--shadow`；分类色 `CAT_COLORS` 在脚本里）。改配色只动这两处。
 - 文档：`AGENTS.md`、`README.md`、`docs/ARCHITECTURE.md`、`docs/DETAIL.md`。

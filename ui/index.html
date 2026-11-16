@@ -213,6 +213,18 @@
   .chip.cat { background: var(--brand-soft); color: var(--brand); border-color: transparent; }
   .chip.ok { background: rgba(22, 163, 74, .12); color: var(--ok); border-color: transparent; }
 
+  /* ---------- 日程历史 ---------- */
+  .daygroup { padding: 16px 18px; }
+  .daygroup + .daygroup { margin-top: 12px; }
+  .dayhead {
+    display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .dayhead b { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .dayhead .wd { font-size: 12px; color: var(--muted); }
+  .dayhead .dh-meta { margin-left: auto; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .daygroup ul.list li { padding: 8px 0; }
+
   button.primary, button.ghost {
     font: inherit; cursor: pointer; border-radius: 10px; padding: 8px 14px;
     transition: transform .14s, box-shadow .14s, background .14s;
@@ -355,6 +367,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
         今日
       </button>
+      <button role="tab" data-tab="schedule" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M7 14h4M7 17.5h7"/></svg>
+        日程
+      </button>
       <button role="tab" data-tab="goals" aria-selected="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
         目标
@@ -432,6 +448,30 @@
         <div class="card-head"><h2>进行中的目标</h2><span class="hint" id="goalHint"></span></div>
         <div class="grid three" id="todayGoals"></div>
       </div>
+    </section>
+
+    <!-- ========== 日程历史 ========== -->
+    <section id="pane-schedule" hidden>
+      <div class="card">
+        <div class="card-head"><h2>日程历史</h2><span class="hint" id="schedHint"></span></div>
+        <form id="evFilterForm">
+          <div class="row">
+            <span class="tp-label">从</span><input type="date" name="from" style="width:150px">
+            <span class="tp-label">到</span><input type="date" name="to" style="width:150px">
+            <input name="q" placeholder="标题 / 标签 / 备注关键词">
+            <button class="primary" type="submit">筛选</button>
+            <button class="ghost" type="button" id="evTodayBtn">回到今天</button>
+          </div>
+          <div class="row seg" id="evPresets">
+            <button type="button" data-preset="week">本周</button>
+            <button type="button" data-preset="month">本月</button>
+            <button type="button" data-preset="lastmonth">上月</button>
+            <button type="button" data-preset="d30">近 30 天</button>
+            <button type="button" data-preset="all">全部</button>
+          </div>
+        </form>
+      </div>
+      <div id="schedList" style="margin-top:16px"></div>
     </section>
 
     <!-- ========== 目标 ========== -->
@@ -564,6 +604,8 @@ const RANGE_CN = { week: '本周', month: '本月', year: '今年' };
 let STATE = null;
 let RANGE = 'week';
 let TAB = 'today';
+let EVENTS = [];        // 日程历史页当前筛选结果（/api/events 的返回）
+let SCHED_INIT = false; // 是否已经初始化过筛选条件
 
 function toast(msg) {
   const el = $('#toast');
@@ -604,9 +646,55 @@ async function load() {
   renderStats();
 }
 
+/** 数据改动后：刷新总览；若在日程历史页，同时刷新列表。 */
+async function refreshAll() {
+  await load();
+  if (TAB === 'schedule') await loadSchedule();
+}
+
 const fmtH = (h) => (Math.round(h * 10) / 10).toFixed(1) + 'h';
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sumHours = (evs) => evs.reduce((s, e) => s + (e.hours || 0), 0);
+
+/* date 工具：一律走本地时间，避免 toISOString 的 UTC 偏移 */
+function ymd(d) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function parseYmd(s) { return new Date(s + 'T00:00:00'); }
+function todayYmd() { return (STATE && STATE.today.date) || ymd(new Date()); }
+function evHours(e) {
+  if (typeof e.hours === 'number') return e.hours;
+  if (!e.start || !e.end) return 0;
+  const [sh, sm] = e.start.split(':').map(Number);
+  const [eh, em] = e.end.split(':').map(Number);
+  return Math.max(0, (eh * 60 + em - sh * 60 - sm) / 60);
+}
+
+/** 今日 + 历史页两份数据合并，供「改 / 删」按 id 查找。 */
+function allEvents() {
+  const map = new Map();
+  for (const e of (STATE && STATE.today.events) || []) map.set(e.id, e);
+  for (const e of EVENTS) {
+    const old = map.get(e.id) || {};
+    map.set(e.id, { ...old, ...e });
+  }
+  return [...map.values()];
+}
+
+function evRow(e) {
+  return `<li>
+      <span class="time">${e.start ? esc(e.start) + '–' + esc(e.end || '') : '待定'}</span>
+      <span class="title ${e.status === 'done' ? 'done' : ''}">${esc(e.title)}</span>
+      <span class="chip cat">${CAT_CN[e.category] || e.category}</span>
+      ${(e.tags || []).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}
+      ${e.status === 'done'
+        ? '<span class="chip ok">已完成</span>'
+        : `<button class="ghost mini" data-done="${esc(e.id)}">完成</button>`}
+      <button class="ghost mini" data-edit="${esc(e.id)}" title="编辑这条日程">改</button>
+      <button class="ghost mini" data-del="${esc(e.id)}" title="删除这条日程">删</button>
+    </li>`;
+}
 
 function kpiCard(icon, color, label, value, unit, delta) {
   return `<div class="kpi">
@@ -655,18 +743,7 @@ function activeDays(s) { return Object.keys(s.byDay || {}).length; }
 /* ---------- 今日 ---------- */
 function renderToday() {
   const t = STATE.today;
-  $('#todayList').innerHTML = t.events.map((e) => `
-    <li>
-      <span class="time">${e.start ? esc(e.start) + '–' + esc(e.end || '') : '待定'}</span>
-      <span class="title ${e.status === 'done' ? 'done' : ''}">${esc(e.title)}</span>
-      <span class="chip cat">${CAT_CN[e.category] || e.category}</span>
-      ${e.tags.map((x) => `<span class="chip">${esc(x)}</span>`).join('')}
-      ${e.status === 'done'
-        ? '<span class="chip ok">已完成</span>'
-        : `<button class="ghost mini" data-done="${esc(e.id)}">完成</button>`}
-      <button class="ghost mini" data-edit="${esc(e.id)}" title="编辑这条日程">改</button>
-      <button class="ghost mini" data-del="${esc(e.id)}" title="删除这条日程">删</button>
-    </li>`).join('');
+  $('#todayList').innerHTML = t.events.map(evRow).join('');
   $('#todayEmpty').hidden = t.events.length > 0;
 
   const goals = t.goals;
@@ -794,6 +871,102 @@ function donut(cats) {
   </div>`;
 }
 
+/* ---------- 日程历史 ---------- */
+const PRESET_CN = { week: '本周', month: '本月', lastmonth: '上月', d30: '近 30 天', all: '全部' };
+
+function presetRange(name) {
+  const today = todayYmd();
+  const t = parseYmd(today);
+  if (name === 'week') {
+    const dow = (t.getDay() + 6) % 7; // 周一为 0
+    const mon = new Date(t.getTime());
+    mon.setDate(t.getDate() - dow);
+    return { from: ymd(mon), to: today };
+  }
+  if (name === 'month') {
+    const first = new Date(t.getFullYear(), t.getMonth(), 1);
+    const last = new Date(t.getFullYear(), t.getMonth() + 1, 0);
+    return { from: ymd(first), to: ymd(last) };
+  }
+  if (name === 'lastmonth') {
+    const first = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+    const last = new Date(t.getFullYear(), t.getMonth(), 0);
+    return { from: ymd(first), to: ymd(last) };
+  }
+  if (name === 'd30') {
+    const s = new Date(t.getTime());
+    s.setDate(t.getDate() - 29);
+    return { from: ymd(s), to: today };
+  }
+  return { from: '', to: '' }; // all
+}
+
+function applyPreset(name) {
+  const r = presetRange(name);
+  const f = $('#evFilterForm');
+  f.elements.from.value = r.from;
+  f.elements.to.value = r.to;
+  for (const b of document.querySelectorAll('#evPresets button')) {
+    b.setAttribute('aria-pressed', String(b.dataset.preset === name));
+  }
+}
+
+function renderSchedule() {
+  const list = $('#schedList');
+  const total = EVENTS.reduce((s, e) => s + evHours(e), 0);
+  $('#schedHint').textContent = EVENTS.length ? `${EVENTS.length} 条 · 合计 ${fmtH(total)}` : '';
+  const f = $('#evFilterForm');
+  const span = f.elements.from.value && f.elements.to.value ? `${f.elements.from.value} ~ ${f.elements.to.value}` : '全部时间';
+  if (!EVENTS.length) {
+    list.innerHTML = `<div class="card"><div class="empty">${esc(span)} 没有日程。</div></div>`;
+    return;
+  }
+  const groups = new Map();
+  for (const e of EVENTS) {
+    if (!groups.has(e.date)) groups.set(e.date, []);
+    groups.get(e.date).push(e);
+  }
+  list.innerHTML = [...groups.keys()]
+    .sort((a, b) => b.localeCompare(a))
+    .map((d) => {
+      const evs = groups.get(d).slice().sort((a, b) => (a.start || '99:99').localeCompare(b.start || '99:99'));
+      const h = evs.reduce((s, e) => s + evHours(e), 0);
+      const wd = '日一二三四五六'[parseYmd(d).getDay()];
+      const isToday = d === todayYmd();
+      return `<div class="card daygroup">
+        <div class="dayhead">
+          <b>${esc(d)}</b><span class="wd">周${wd}${isToday ? ' · 今天' : ''}</span>
+          <span class="dh-meta">${evs.length} 条 · ${fmtH(h)}</span>
+        </div>
+        <ul class="list">${evs.map(evRow).join('')}</ul>
+      </div>`;
+    }).join('');
+}
+
+async function loadSchedule() {
+  if (!SCHED_INIT) {
+    SCHED_INIT = true;
+    applyPreset('month');
+  }
+  const f = $('#evFilterForm');
+  const from = f.elements.from.value;
+  const to = f.elements.to.value;
+  const q = f.elements.q.value.trim();
+  const qs = new URLSearchParams();
+  if (from) qs.set('from', from);
+  if (to) qs.set('to', to);
+  if (q) qs.set('q', q);
+  if (from || to) qs.set('limit', '500');
+  else qs.set('all', '1');
+  try {
+    EVENTS = await api('/events?' + qs.toString());
+  } catch (err) {
+    EVENTS = [];
+    toast('读取日程失败：' + err.message);
+  }
+  renderSchedule();
+}
+
 /* ---------- 交互 ---------- */
 /* ---------- 时间选择 ---------- */
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
@@ -827,12 +1000,12 @@ function setTime(form, which, value) {
 }
 
 function openEdit(id) {
-  const e = ((STATE && STATE.today.events) || []).find((x) => x.id === id);
+  const e = allEvents().find((x) => x.id === id);
   if (!e) return toast('找不到这条日程，先刷新一下');
   const f = $('#editForm');
   f.elements.id.value = e.id;
   f.elements.title.value = e.title;
-  f.elements.date.value = STATE.today.date;
+  f.elements.date.value = e.date || todayYmd();
   setTime(f, 's', e.start);
   setTime(f, 'e', e.end);
   f.elements.category.value = e.category || 'work';
@@ -859,7 +1032,7 @@ $('#editForm').addEventListener('submit', async (ev) => {
   try {
     toast((await api('/event/update', post(body))).message);
     $('#evModal').hidden = true;
-    await load();
+    await refreshAll();
   } catch (err) { toast('保存失败：' + err.message); }
 });
 
@@ -873,6 +1046,7 @@ $('#tabs').addEventListener('click', (ev) => {
   TAB = btn.dataset.tab;
   for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', String(b === btn));
   for (const s of document.querySelectorAll('main > section, .content > section')) s.hidden = s.id !== 'pane-' + TAB;
+  if (TAB === 'schedule') loadSchedule();
 });
 
 $('#statsSeg').addEventListener('click', (ev) => {
@@ -886,7 +1060,7 @@ $('#statsSeg').addEventListener('click', (ev) => {
 document.addEventListener('click', async (ev) => {
   const done = ev.target.closest('[data-done]');
   if (done) {
-    try { toast((await api('/done', post({ id: done.dataset.done }))).message); await load(); }
+    try { toast((await api('/done', post({ id: done.dataset.done }))).message); await refreshAll(); }
     catch (err) { toast('失败：' + err.message); }
     return;
   }
@@ -894,9 +1068,9 @@ document.addEventListener('click', async (ev) => {
   if (ed) { openEdit(ed.dataset.edit); return; }
   const dl = ev.target.closest('[data-del]');
   if (dl) {
-    const e = ((STATE && STATE.today.events) || []).find((x) => x.id === dl.dataset.del);
-    if (!e || !confirm(`删除「${e.title}」？`)) return;
-    try { toast((await api('/event/delete', post({ id: dl.dataset.del }))).message); await load(); }
+    const e = allEvents().find((x) => x.id === dl.dataset.del);
+    if (!e || !confirm(`删除「${e.title}」（${e.date || ''}）？`)) return;
+    try { toast((await api('/event/delete', post({ id: dl.dataset.del }))).message); await refreshAll(); }
     catch (err) { toast('删除失败：' + err.message); }
     return;
   }
@@ -926,7 +1100,7 @@ $('#eventForm').addEventListener('submit', async (ev) => {
     f.elements.tags.value = '';
     setTime(f, 's', '');
     setTime(f, 'e', '');
-    await load();
+    await refreshAll();
   } catch (err) { toast('失败：' + err.message); }
 });
 
@@ -971,7 +1145,24 @@ $('#reviewBtn').addEventListener('click', async () => {
   catch (err) { toast('失败：' + err.message); }
 });
 
-$('#refresh').addEventListener('click', load);
+$('#refresh').addEventListener('click', refreshAll);
+
+/* ---------- 日程历史页 ---------- */
+$('#evFilterForm').addEventListener('submit', (ev) => { ev.preventDefault(); loadSchedule(); });
+$('#evPresets').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-preset]');
+  if (!btn) return;
+  applyPreset(btn.dataset.preset);
+  loadSchedule();
+});
+$('#evTodayBtn').addEventListener('click', () => {
+  const f = $('#evFilterForm');
+  f.elements.from.value = todayYmd();
+  f.elements.to.value = todayYmd();
+  for (const b of document.querySelectorAll('#evPresets button')) b.setAttribute('aria-pressed', 'false');
+  loadSchedule();
+});
+
 fillTimeSelects(document);
 load();
 </script>

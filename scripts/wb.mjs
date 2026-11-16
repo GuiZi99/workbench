@@ -245,7 +245,8 @@ const cmds = {
                     [--category C] [--tag a,b] [--note X] [--status planned|done]
     del <event-id|note-id|goal-id>                   删除（日程软删除，记录物理删除，目标标记 dropped）
     done <event-id>                                  标记日程完成
-    list <events|goals|notes> [--from D] [--to D] [--limit N]
+    list events [--from D] [--to D] [--q 关键词] [--limit N | --all]    按日期倒序列出日程
+    list goals|notes [--limit N]
     search <关键词> [--limit N]
     check                               数据自检
 
@@ -504,11 +505,13 @@ const cmds = {
     const kind = pos[0] || 'events';
     const limit = opt.limit ? Number(opt.limit) : 20;
     if (kind === 'events') {
+      const q = typeof opt.q === 'string' ? opt.q.trim().toLowerCase() : '';
       const evs = readLines(F.events)
         .filter((e) => !e.deleted)
         .filter((e) => (!opt.from || e.date >= opt.from) && (!opt.to || e.date <= opt.to))
+        .filter((e) => !q || `${e.title} ${e.note || ''} ${(e.tags || []).join(' ')} ${e.category || ''}`.toLowerCase().includes(q))
         .sort((a, b) => (b.date + (b.start || '')).localeCompare(a.date + (a.start || '')))
-        .slice(0, limit);
+        .slice(0, opt.all ? undefined : limit);
       if (opt.json) return console.log(JSON.stringify(evs));
       console.log(evs.map((e) => `${e.date} ${e.start || '--:--'}-${e.end || '--:--'} ${e.status === 'done' ? '✓' : '·'} ${e.title} [${e.id}]`).join('\n') || '（空）');
     } else if (kind === 'notes') {

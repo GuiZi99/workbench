@@ -1,4 +1,33 @@
 {
   "version": 1,
-  "goals": []
+  "goals": [
+    {
+      "id": "gl-ltot2qdv",
+      "title": "社群胸新客业绩",
+      "horizon": "month",
+      "area": "",
+      "target": 60,
+      "unit": "万",
+      "progress": 6,
+      "due": "截止11月30日",
+      "why": "新客社群重点品项运营突破项目",
+      "status": "active",
+      "created": "2026-11-15",
+      "updated": "2026-11-15"
+    },
+    {
+      "id": "gl-luf5h27a",
+      "title": "社群胸新客到院",
+      "horizon": "month",
+      "area": "",
+      "target": 35,
+      "unit": "人",
+      "progress": 11,
+      "due": "截止11月30日",
+      "why": "新客社群重点品项运营突破项目",
+      "status": "active",
+      "created": "2026-11-15",
+      "updated": "2026-11-15"
+    }
+  ]
 }
