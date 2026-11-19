@@ -4,6 +4,7 @@
 
 ## 当前版本
 
+- v1.5.0 —— 2026-11-19（手机访问：装进 `web` profile + Tailscale 绑定 + 登录自启）
 - v1.4.0 —— 2026-11-16（统计口径：只有「已完成」的日程才计入投入工时）
 - v1.3.0 —— 2026-11-16（新增「日程」历史页：跨日期查看 / 检索 / 改 / 删）
 - v1.2.0 —— 2026-11-15（日程可改可删；时间改为小时/分钟下拉选择）
@@ -66,6 +67,20 @@
   `ssh.exe: fatal error - couldn't create signal pipe, Win32 error 5`，
   需要提权到 `danger-full-access` 才能推。
 
+## 手机访问与自启（v1.5.0）
+
+- 第二套入口：`web` profile（`C:\Users\SHmylike\.dsh\profiles\web`），已 link 本仓库并写进
+  `dsh.profile.bundles`；它与桌面版（127.0.0.1:51049）**共用同一个 `data/`**（bundle 用 `link:` 指向本目录）。
+- 监听：`dsh web --profile web --host 100.86.27.36 --port 3080 --no-open`，只绑 Tailscale IPv4
+  （`dsh-desktop`，账号 `961831445@`）。手机装 Tailscale App 登录同账号后访问
+  `http://100.86.27.36:3080/?token=...`；token 每次启动重新生成，写进 `logs/web.out.log`。
+- 自启：`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\Workbench Web.vbs`
+  → `workbench\scripts\start-web.vbs`（无窗口）→ `scripts\start-web.ps1`。
+  脚本幂等（端口在听就退出）、自动取当前 Tailscale IPv4（最多等 90s）、日志超 2 MB 轮转。
+  日志：`logs\web.log`（启动器）、`logs\web.out.log`（含 token，已 gitignore）。
+- 前置条件：必须在**登录 Windows 之后**才启动（Startup 文件夹随登录触发），且 Tailscale 服务在跑。
+- 卸掉自启：删除 Startup 里那个 `Workbench Web.vbs`。
+
 ## 下一步
 
 1. 日常使用后按周生成复盘（`review week --write`）；界面趋势图已就绪，观察是否需要按月对比。
@@ -76,7 +91,8 @@
 
 - v2 候选：日程重复规则、目标周检查提醒（可用 `schedule_create` 定时提醒）、
   原生 DSH 侧栏面板（需要 Typert codegen，成本高）、导出为周报 Markdown 汇总。
-- 已知限制：Host 半改动需重启 DSH；`/workbench` 无鉴权（仅绑定 127.0.0.1）。
+- 已知限制：Host 半改动需重启 DSH；`/workbench` 无鉴权（桌面版绑 127.0.0.1，手机版绑 Tailscale
+  IPv4，靠 tailnet 隔离）；`web` profile 里没有聊天会话数据（只用来跑工作台）。
 
 ## 坑
 

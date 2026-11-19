@@ -8,12 +8,12 @@
       "area": "",
       "target": 60,
       "unit": "万",
-      "progress": 6,
+      "progress": 3,
       "due": "截止11月30日",
       "why": "新客社群重点品项运营突破项目",
       "status": "active",
       "created": "2026-11-15",
-      "updated": "2026-11-15"
+      "updated": "2026-11-18"
     },
     {
       "id": "gl-luf5h27a",
@@ -22,12 +22,12 @@
       "area": "",
       "target": 35,
       "unit": "人",
-      "progress": 11,
+      "progress": 18,
       "due": "截止11月30日",
       "why": "新客社群重点品项运营突破项目",
       "status": "active",
       "created": "2026-11-15",
-      "updated": "2026-11-15"
+      "updated": "2026-11-18"
     }
   ]
 }

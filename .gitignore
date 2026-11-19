@@ -9,3 +9,12 @@ node_modules/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# 本机运行日志（含一次性登录 token，不入库）
+logs/
+.tmp-*
+
+# 本机下载的安装包（Tailscale MSI 等，不占仓库体积）
+tools/
+
+.commit-msg.txt
